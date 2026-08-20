@@ -1,7 +1,9 @@
 # Selections
 
 **Status:** Draft 0.1
+
 **Editor:** Travis Briggs ([User:Audiodude](https://en.wikipedia.org/wiki/User:Audiodude) \<audiodude@gmail.com\>), in association with [Kiwix](https://kiwix.org)
+
 **Canonical home:** https://github.com/audiodude/mw-selections
 
 This document is derived from *"WP1 — The Source for Selections"* (Travis

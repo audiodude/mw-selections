@@ -1,0 +1,15 @@
+{
+  "description": "Conforming rows that normalize to an already-ingested (item_title, namespace_id) collapse to the first occurrence. ingested counts unique items; dropped counts only domain-non-matching rows.",
+  "spec": [
+    "§7.4",
+    "§4.4"
+  ],
+  "params": {
+    "dbname": "enwiki",
+    "endpoint": "https://query.wikidata.org/sparql",
+    "query": "SELECT ?url WHERE { ?url schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> . }"
+  },
+  "provenance": {
+    "derived": "Assembled from values in the article-variable capture; query text is illustrative."
+  }
+}

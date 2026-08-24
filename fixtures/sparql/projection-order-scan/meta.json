@@ -1,5 +1,5 @@
 {
-  "description": "No ?url or ?article projected: scan variables in projection order and pick the first whose binding in the FIRST result row contains the project domain. ?item (a Wikidata URI) does not match; ?page does. Non-matching rows are then dropped and counted.",
+  "description": "No ?url or ?article projected: the first row identifies ?page — ?item (a Wikidata URI, examined first in projection order) does not contain the domain, ?page does. Non-matching rows are then dropped and counted.",
   "spec": [
     "§7.4"
   ],

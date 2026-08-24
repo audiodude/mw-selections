@@ -20,8 +20,9 @@ Bare_title
 
 ## Contents
 
-- [docs/SPEC.md](docs/SPEC.md) — the Selections specification (canonical copy)
-- [fixtures/](fixtures/) — conformance fixtures: 74 language-neutral test
+- [docs/SPEC.md](docs/SPEC.md) — the Selections specification, v1.0.0
+  (canonical copy)
+- [fixtures/](fixtures/) — conformance fixtures: 77 language-neutral test
   cases covering every normative rule in SPEC §4–§7, with captured upstream
   samples ([harness contract](fixtures/README.md))
 - [docs/decision-record.md](docs/decision-record.md) — design decisions behind

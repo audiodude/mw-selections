@@ -1,0 +1,14 @@
+{
+  "description": "Mapper output is deduplicated on (item_title, namespace_id), first occurrence wins.",
+  "spec": [
+    "§7.5",
+    "§4.4"
+  ],
+  "params": {
+    "url": "https://quarry.wmcloud.org/query/90213",
+    "database": "enwiki"
+  },
+  "provenance": {
+    "derived": "Shape from the captured output."
+  }
+}

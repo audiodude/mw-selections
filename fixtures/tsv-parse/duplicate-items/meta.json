@@ -1,6 +1,0 @@
-{
-  "description": "A Selection MUST NOT contain duplicate items. Key is (item_title, namespace_id) with absent namespace ≡ 0; the id is never part of the key.",
-  "spec": [
-    "§4.4"
-  ]
-}

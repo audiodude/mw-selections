@@ -1,5 +1,5 @@
 {
-  "description": "No ?url/?article, and no projected variable matches the domain in the first result row (even though a later row is on the target domain): variable selection fails.",
+  "description": "No ?url/?article is projected and no row identifies any projected variable (every row is on another domain): variable selection fails.",
   "spec": [
     "§7.4"
   ],

@@ -1,0 +1,15 @@
+{
+  "status": "ok",
+  "selection": {
+    "dbname": "enwiki",
+    "pages": [
+      "Statue_of_Liberty",
+      "Paris"
+    ],
+    "source": {
+      "type": "quarry",
+      "url": "https://quarry.wmcloud.org/query/90213",
+      "dynamic": true
+    }
+  }
+}

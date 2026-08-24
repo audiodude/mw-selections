@@ -1,7 +1,7 @@
 # Selections conformance fixtures
 
 Language-neutral, input → expected-output test cases for the
-[Selections specification](../docs/SPEC.md) (Draft 0.1). They are the
+[Selections specification](../docs/SPEC.md) (v1.0.0). They are the
 reference suite for every implementation — TypeScript `selection-core`,
 WP1's Python, anything else. Implementations SHOULD vendor this directory
 and run every case. Where the spec's prose and these fixtures disagree,
@@ -53,7 +53,9 @@ Parse `.swiki`/TSV bytes (SPEC §5.1, §7.2).
   is a dbname in `sitematrix.json`; otherwise no dbname is resolved
   (SPEC §7.2 then requires the ingesting UI to prompt; that UI behavior is
   not fixture-encodable).
-- **Result:** `{pages}` or `{dbname, pages}`.
+- **Result:** `{pages}` or `{dbname, pages}`, deduplicated on
+  (`item_title`, `namespace_id`), first occurrence wins (ingestion
+  normalization — see pin #1).
 
 ### `tsv-serialize`
 
@@ -71,7 +73,9 @@ Parse Selection JSON bytes into the canonical form (SPEC §5.2).
 - **Result:** the canonical Selection: `pages` in canonical item form,
   all other top-level and `source` members preserved verbatim. `dbname`
   must be present (§4.1) and a string, but its *validity* against the
-  sitematrix is checked only by `validate`.
+  sitematrix is checked only by `validate`. This is a *boundary*
+  operation: duplicates are rejected (`DUPLICATE_ITEM`), never repaired
+  (pin #1).
 
 ### `simple`
 
@@ -91,20 +95,26 @@ Map a captured PetScan JSON response (SPEC §7.3).
   response (the echoed query's `language`/`project` — via the sitematrix —
   or `manual_list_wiki`), never from user input.
 - **Result:** full Selection with
-  `source: {type: "petscan", url, dynamic: true}`.
+  `source: {type: "petscan", url, dynamic: true}`, deduplicated
+  (pin #1).
 
 ### `sparql`
 
 Map a captured SPARQL results-JSON response (SPEC §7.4).
 
 - **Input:** `input.json`, `application/sparql-results+json` verbatim.
-  Projection order (§7.4 rule 2) is the order of `head.vars`.
+  Projection order (§7.4 rule 2) is the order of `head.vars`. Variable
+  selection scans result rows in order; rows identifying no variable are
+  skipped (SPEC §7.4 rule 2, v1.0.0).
 - **Params:** `dbname` (required user input), `endpoint`, `query` — the
   latter two are copied verbatim into `source`. The project domain is
   derived from `dbname` via `sitematrix.json` (host of the site's `url`).
 - **Result:** full Selection with
   `source: {type: "sparql", endpoint, query, dynamic: true}`, plus a
-  `report` of `{ingested, dropped}` row counts (§7.4 rule 3).
+  `report` (§7.4 rule 3): `ingested` counts unique items (equals the
+  length of `pages`), `dropped` counts only domain-non-matching rows.
+  Conforming rows that normalize to an already-ingested key collapse
+  silently (pin #1).
 
 ### `quarry`
 
@@ -117,7 +127,7 @@ Map a captured Quarry output-JSON response (SPEC §7.5).
   (`query_database`). A trailing `_p` replica suffix is stripped
   (`enwiki_p` → `enwiki`).
 - **Result:** full Selection with
-  `source: {type: "quarry", url, dynamic: true}`.
+  `source: {type: "quarry", url, dynamic: true}`, deduplicated (pin #1).
 
 ### `validate`
 
@@ -174,9 +184,10 @@ implementations emit identical bytes.)
 ### Determinism
 
 Item order in results is encounter order of the input (file order, `pages`
-order, response row order). Where an operation deduplicates (`simple`
-only), the first occurrence wins. The spec says Selection order carries no
-meaning (§4.4); fixtures still pin it so outputs are byte-comparable.
+order, response row order). Ingestion operations (`tsv-parse`, `simple`,
+`petscan`, `sparql`, `quarry`) deduplicate; the first occurrence wins. The
+spec says Selection order carries no meaning (§4.4); fixtures still pin it
+so outputs are byte-comparable.
 
 ## Error code registry
 
@@ -185,7 +196,7 @@ meaning (§4.4); fixtures still pin it so outputs are byte-comparable.
 | `ENCODING_INVALID` | Input bytes are not valid UTF-8 | tsv-parse |
 | `EMPTY_TITLE` | Empty `item_title` (incl. empty first TSV column / blank interior line) | tsv-parse, json-parse |
 | `FIELD_FORBIDDEN_CHAR` | `\t` or `\n` in an item field | json-parse, tsv-serialize, simple, validate |
-| `DUPLICATE_ITEM` | Duplicate (`item_title`, `namespace_id`), absent ns ≡ 0 | tsv-parse, json-parse, validate |
+| `DUPLICATE_ITEM` | Duplicate (`item_title`, `namespace_id`), absent ns ≡ 0 | json-parse, validate |
 | `TSV_INVALID_ID` | Second column not a non-negative decimal integer | tsv-parse |
 | `TSV_INVALID_NAMESPACE` | Third column not a non-negative decimal integer | tsv-parse |
 | `TSV_TOO_MANY_COLUMNS` | More than three columns in a row | tsv-parse |
@@ -229,10 +240,14 @@ Where the spec leaves latitude, these fixtures pin one behavior so
 independent implementations agree. Each pin is a candidate spec
 clarification:
 
-1. **Strict parsing:** duplicates in `.swiki` or JSON input are errors
-   (§4.4 says a Selection MUST NOT contain them; nothing authorizes a
-   parser to repair one). Only manual-text normalization dedups (§7.1
-   step 7).
+1. **Ingestion dedups, boundaries reject:** operations that model an
+   ingesting UI (`tsv-parse`, `simple`, and the three mappers)
+   de-duplicate on (`item_title`, `namespace_id`), first occurrence wins
+   — normalization is the ingesting UI's job (§8). `json-parse` and
+   `validate` model the system boundary and reject duplicates
+   (`DUPLICATE_ITEM`): §4.4 says a Selection MUST NOT contain them, and
+   §8 says a storing system rejects rather than fixes. The spec itself
+   never authorizes serializing a duplicate.
 2. **TSV cells:** empty trailing cells mean *absent*; a final newline
    after the last row is optional; a blank interior line is an
    `EMPTY_TITLE` row; more than three columns is an error.
@@ -266,9 +281,9 @@ Every MUST/MUST NOT in SPEC §4–§7, mapped to its cases:
 | §4.3 title SHOULD be db_style | simple/pipeline-basic, sparql/title-decoding |
 | §4.3 non-extant items allowed | tsv-parse/same-id-different-titles, tsv-parse/header-like-title |
 | §4.3 fields MUST NOT contain `\t`/`\n` | json-parse/forbidden-tab, json-parse/forbidden-newline, tsv-serialize/forbidden-tab-in-title, tsv-serialize/forbidden-newline-in-title, simple/forbidden-decoded-tab, simple/forbidden-decoded-newline, validate/forbidden-character |
-| §4.4 MUST NOT contain duplicates; key (title, ns); absent ns ≡ 0 | tsv-parse/duplicate-items, json-parse/duplicate-absent-namespace, validate/duplicate-items, simple/deduplication |
+| §4.4 MUST NOT contain duplicates; key (title, ns); absent ns ≡ 0 | tsv-parse/deduplication, json-parse/duplicate-absent-namespace, validate/duplicate-items, simple/deduplication, sparql/duplicate-rows-collapse, quarry/deduplication |
 | §4.4 same title, different ns acceptable | tsv-parse/same-title-different-namespace, petscan/manual-list |
-| §4.4 id never part of the key | tsv-parse/same-id-different-titles, tsv-parse/duplicate-items |
+| §4.4 id never part of the key | tsv-parse/same-id-different-titles, tsv-parse/deduplication |
 | §5.1.1 MUST NOT contain a header row | tsv-parse/header-row, tsv-parse/header-like-title, tsv-serialize/canonical |
 | §5.1.2 first column MUST be non-null, MUST contain title | tsv-parse/empty-title, tsv-parse/basic, tsv-parse/blank-interior-line |
 | §5.1.3–4 optional id / namespace columns; `title\t\tns` | tsv-parse/basic, tsv-serialize/canonical |
@@ -289,7 +304,7 @@ Every MUST/MUST NOT in SPEC §4–§7, mapped to its cases:
 | §7.2 parse per §5.1; dbname from filename/sidecar | tsv-parse/* (the §7.2 MUST-prompt is UI behavior; filename-dbname-unknown pins the no-dbname result that triggers it) |
 | §7.3 fields MUST come from PetScan output; dbname MUST come from PetScan | petscan/manual-list |
 | §7.4.1 dbname REQUIRED input; domain via sitematrix | all sparql cases (`params.dbname`) |
-| §7.4.2 variable selection: `?url` > `?article` > projection-order first-row scan | sparql/article-variable, sparql/url-over-article, sparql/projection-order-scan, sparql/no-variable-selected |
+| §7.4.2 variable selection: `?url` > `?article` > row scan in projection order (v1.0.0) | sparql/article-variable, sparql/url-over-article, sparql/projection-order-scan, sparql/scan-skips-leading-rows, sparql/no-variable-selected |
 | §7.4.3 rows MUST match either URL form; MUST drop; MUST report counts | sparql/dropped-rows-reported, sparql/projection-order-scan, sparql/index-php-url-form |
 | §7.4.4 zero conforming rows is an error | sparql/zero-conforming-rows |
 | §7.4.5 percent-decode, spaces → underscores, title-only | sparql/title-decoding |

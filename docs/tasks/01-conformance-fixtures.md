@@ -59,3 +59,20 @@ item/TSV forms, and the clause → case coverage matrix are in
 - Not fixture-encodable (runtime/UI behavior), listed in the README:
   §4.3 title-over-id precedence, §6 re-materialization behavior, §7.2's
   prompt-the-user requirement, §8 size policy.
+
+**2026-08-23 — revised with spec v1.0.0.** Two behavior changes, 77 cases
+now:
+
+- SPEC §7.4 rule 2 revised (and the spec marked **v1.0.0**): variable
+  selection scans result rows in order instead of sampling only the first
+  row; non-identifying leading rows are skipped (new
+  `sparql/scan-skips-leading-rows`; editorial decision 5 in SPEC §10).
+- Duplicates: spec untouched (§4.4 still MUST NOT; §8 gate still
+  rejects), but ingestion operations now de-duplicate, first occurrence
+  wins — `tsv-parse/duplicate-items` became `tsv-parse/deduplication`,
+  and `sparql/duplicate-rows-collapse` + `quarry/deduplication` pin
+  mapper dedup. `json-parse`/`validate` (boundary operations) keep
+  rejecting with `DUPLICATE_ITEM`. sparql `report.ingested` counts unique
+  items; `dropped` counts only domain-non-matching rows.
+- Re-verified: linter OK (77 cases), updated throwaway reference
+  implementation reproduces 77/77 expected outputs.

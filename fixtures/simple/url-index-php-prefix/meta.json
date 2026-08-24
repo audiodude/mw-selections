@@ -1,0 +1,6 @@
+{
+  "description": "The https://<domain>/w/index.php?title= prefix is stripped.",
+  "spec": [
+    "§7.1"
+  ]
+}

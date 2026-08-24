@@ -1,0 +1,6 @@
+{
+  "description": "Zero items serialize to an empty file.",
+  "spec": [
+    "§5.1"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "description": "dbname must be a string.",
+  "spec": [
+    "§4.2",
+    "§5.2"
+  ]
+}

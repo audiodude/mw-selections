@@ -1,0 +1,9 @@
+{
+  "description": "dbname resolved from the recommended filename convention: penultimate dot-segment, validated against the sitematrix.",
+  "spec": [
+    "§5.1"
+  ],
+  "params": {
+    "filename": "my-selection.enwiki.tsv"
+  }
+}

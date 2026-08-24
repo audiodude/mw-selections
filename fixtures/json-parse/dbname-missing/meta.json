@@ -1,0 +1,7 @@
+{
+  "description": "A Selection REQUIRES a dbname (SPEC §4.1); JSON represents the entire Selection, so it must carry one.",
+  "spec": [
+    "§4.1",
+    "§5.2"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "description": "ids are database integers; a fractional number is malformed.",
+  "spec": [
+    "§4.3",
+    "§5.2"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "description": "A bare first row reading item_title is data, not a header: there is no header allowance to strip.",
+  "spec": [
+    "§5.1"
+  ]
+}

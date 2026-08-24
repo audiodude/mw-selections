@@ -1,0 +1,6 @@
+{
+  "description": "Input that is not well-formed JSON.",
+  "spec": [
+    "§5.2"
+  ]
+}

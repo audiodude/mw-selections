@@ -1,0 +1,250 @@
+{
+  "sitematrix": {
+    "count": 33,
+    "0": {
+      "code": "de",
+      "name": "Deutsch",
+      "site": [
+        {
+          "url": "https://de.wikipedia.org",
+          "dbname": "dewiki",
+          "code": "wiki",
+          "sitename": "Wikipedia"
+        },
+        {
+          "url": "https://de.wiktionary.org",
+          "dbname": "dewiktionary",
+          "code": "wiktionary",
+          "sitename": "Wiktionary"
+        },
+        {
+          "url": "https://de.wikibooks.org",
+          "dbname": "dewikibooks",
+          "code": "wikibooks",
+          "sitename": "Wikibooks"
+        },
+        {
+          "url": "https://de.wikinews.org",
+          "dbname": "dewikinews",
+          "code": "wikinews",
+          "sitename": "Wikinews",
+          "closed": true
+        },
+        {
+          "url": "https://de.wikiquote.org",
+          "dbname": "dewikiquote",
+          "code": "wikiquote",
+          "sitename": "Wikiquote"
+        },
+        {
+          "url": "https://de.wikisource.org",
+          "dbname": "dewikisource",
+          "code": "wikisource",
+          "sitename": "Wikisource"
+        },
+        {
+          "url": "https://de.wikiversity.org",
+          "dbname": "dewikiversity",
+          "code": "wikiversity",
+          "sitename": "Wikiversity"
+        },
+        {
+          "url": "https://de.wikivoyage.org",
+          "dbname": "dewikivoyage",
+          "code": "wikivoyage",
+          "sitename": "Wikivoyage"
+        }
+      ],
+      "dir": "ltr",
+      "localname": "German"
+    },
+    "1": {
+      "code": "en",
+      "name": "English",
+      "site": [
+        {
+          "url": "https://en.wikipedia.org",
+          "dbname": "enwiki",
+          "code": "wiki",
+          "sitename": "Wikipedia"
+        },
+        {
+          "url": "https://en.wiktionary.org",
+          "dbname": "enwiktionary",
+          "code": "wiktionary",
+          "sitename": "Wiktionary"
+        },
+        {
+          "url": "https://en.wikibooks.org",
+          "dbname": "enwikibooks",
+          "code": "wikibooks",
+          "sitename": "Wikibooks"
+        },
+        {
+          "url": "https://en.wikinews.org",
+          "dbname": "enwikinews",
+          "code": "wikinews",
+          "sitename": "Wikinews",
+          "closed": true
+        },
+        {
+          "url": "https://en.wikiquote.org",
+          "dbname": "enwikiquote",
+          "code": "wikiquote",
+          "sitename": "Wikiquote"
+        },
+        {
+          "url": "https://en.wikisource.org",
+          "dbname": "enwikisource",
+          "code": "wikisource",
+          "sitename": "Wikisource"
+        },
+        {
+          "url": "https://en.wikiversity.org",
+          "dbname": "enwikiversity",
+          "code": "wikiversity",
+          "sitename": "Wikiversity"
+        },
+        {
+          "url": "https://en.wikivoyage.org",
+          "dbname": "enwikivoyage",
+          "code": "wikivoyage",
+          "sitename": "Wikivoyage"
+        }
+      ],
+      "dir": "ltr",
+      "localname": "English"
+    },
+    "2": {
+      "code": "es",
+      "name": "español",
+      "site": [
+        {
+          "url": "https://es.wikipedia.org",
+          "dbname": "eswiki",
+          "code": "wiki",
+          "sitename": "Wikipedia"
+        },
+        {
+          "url": "https://es.wiktionary.org",
+          "dbname": "eswiktionary",
+          "code": "wiktionary",
+          "sitename": "Wikcionario"
+        },
+        {
+          "url": "https://es.wikibooks.org",
+          "dbname": "eswikibooks",
+          "code": "wikibooks",
+          "sitename": "Wikilibros"
+        },
+        {
+          "url": "https://es.wikinews.org",
+          "dbname": "eswikinews",
+          "code": "wikinews",
+          "sitename": "Wikinoticias",
+          "closed": true
+        },
+        {
+          "url": "https://es.wikiquote.org",
+          "dbname": "eswikiquote",
+          "code": "wikiquote",
+          "sitename": "Wikiquote"
+        },
+        {
+          "url": "https://es.wikisource.org",
+          "dbname": "eswikisource",
+          "code": "wikisource",
+          "sitename": "Wikisource"
+        },
+        {
+          "url": "https://es.wikiversity.org",
+          "dbname": "eswikiversity",
+          "code": "wikiversity",
+          "sitename": "Wikiversidad"
+        },
+        {
+          "url": "https://es.wikivoyage.org",
+          "dbname": "eswikivoyage",
+          "code": "wikivoyage",
+          "sitename": "Wikiviajes"
+        }
+      ],
+      "dir": "ltr",
+      "localname": "Spanish"
+    },
+    "3": {
+      "code": "li",
+      "name": "Limburgs",
+      "site": [
+        {
+          "url": "https://li.wikipedia.org",
+          "dbname": "liwiki",
+          "code": "wiki",
+          "sitename": "Wikipedia"
+        },
+        {
+          "url": "https://li.wiktionary.org",
+          "dbname": "liwiktionary",
+          "code": "wiktionary",
+          "sitename": "Wiktionary"
+        },
+        {
+          "url": "https://li.wikibooks.org",
+          "dbname": "liwikibooks",
+          "code": "wikibooks",
+          "sitename": "Wikibeuk"
+        },
+        {
+          "url": "https://li.wikinews.org",
+          "dbname": "liwikinews",
+          "code": "wikinews",
+          "sitename": "Wikinuujs",
+          "closed": true
+        },
+        {
+          "url": "https://li.wikiquote.org",
+          "dbname": "liwikiquote",
+          "code": "wikiquote",
+          "sitename": "Wikiquote"
+        },
+        {
+          "url": "https://li.wikisource.org",
+          "dbname": "liwikisource",
+          "code": "wikisource",
+          "sitename": "Wikibrónne"
+        }
+      ],
+      "dir": "ltr",
+      "localname": "Limburgish"
+    },
+    "4": {
+      "code": "sm",
+      "name": "Gagana Samoa",
+      "site": [
+        {
+          "url": "https://sm.wikipedia.org",
+          "dbname": "smwiki",
+          "code": "wiki",
+          "sitename": "Wikipedia"
+        },
+        {
+          "url": "https://sm.wiktionary.org",
+          "dbname": "smwiktionary",
+          "code": "wiktionary",
+          "sitename": "Wiktionary"
+        }
+      ],
+      "dir": "ltr",
+      "localname": "Samoan"
+    },
+    "specials": [
+      {
+        "url": "https://meta.wikimedia.org",
+        "dbname": "metawiki",
+        "code": "meta",
+        "lang": "meta",
+        "sitename": "Meta-Wiki"
+      }
+    ]
+  }
+}

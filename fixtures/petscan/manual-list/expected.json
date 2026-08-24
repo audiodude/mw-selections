@@ -1,0 +1,26 @@
+{
+  "status": "ok",
+  "selection": {
+    "dbname": "enwiki",
+    "pages": [
+      [
+        "Paris",
+        22989
+      ],
+      [
+        "Statue_of_Liberty",
+        28617
+      ],
+      [
+        "Statue_of_Liberty",
+        19008876,
+        1
+      ]
+    ],
+    "source": {
+      "type": "petscan",
+      "url": "https://petscan.wmcloud.org/?language=en&project=wikipedia&manual_list_wiki=enwiki&manual_list=Statue+of+Liberty%0AParis%0ATalk%3AStatue+of+Liberty&format=json&doit=1&output_compatability=catscan",
+      "dynamic": true
+    }
+  }
+}

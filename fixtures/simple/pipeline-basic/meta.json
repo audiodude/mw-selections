@@ -1,0 +1,6 @@
+{
+  "description": "Trim surrounding whitespace, drop empty lines and comment lines beginning with # (including after trimming), replace spaces with underscores.",
+  "spec": [
+    "§7.1"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "description": "A bare string item and a tuple with namespace 0 collide: absent namespace ≡ 0, and the id is never part of the key.",
+  "spec": [
+    "§4.4"
+  ]
+}

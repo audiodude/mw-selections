@@ -1,0 +1,6 @@
+{
+  "description": "The JSON MUST contain a single top-level object.",
+  "spec": [
+    "§5.2"
+  ]
+}

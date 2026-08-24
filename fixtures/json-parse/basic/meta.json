@@ -1,0 +1,7 @@
+{
+  "description": "The example from SPEC §5.2: string item, full tuple, null-id tuple; source preserved verbatim. Explicit namespace 0 canonicalizes to absent.",
+  "spec": [
+    "§5.2",
+    "§4.3"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "description": "Duplicates after normalization collapse to the first occurrence.",
+  "spec": [
+    "§7.1",
+    "§4.4"
+  ]
+}

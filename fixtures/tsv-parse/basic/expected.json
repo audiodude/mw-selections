@@ -1,0 +1,21 @@
+{
+  "status": "ok",
+  "selection": {
+    "pages": [
+      [
+        "Statue_of_Liberty",
+        28617
+      ],
+      [
+        "Paris",
+        54321
+      ],
+      [
+        "Talk_page_example",
+        null,
+        1
+      ],
+      "Bare_title"
+    ]
+  }
+}

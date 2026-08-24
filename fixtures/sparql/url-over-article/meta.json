@@ -1,0 +1,14 @@
+{
+  "description": "Both ?url and ?article are projected: ?url wins by name priority even though ?article comes first in projection order. Here ?article binds Wikidata entity URIs; using it would be wrong.",
+  "spec": [
+    "§7.4"
+  ],
+  "params": {
+    "dbname": "enwiki",
+    "endpoint": "https://query.wikidata.org/sparql",
+    "query": "SELECT ?article ?url WHERE { ?url schema:about ?article ; schema:isPartOf <https://en.wikipedia.org/> . }"
+  },
+  "provenance": {
+    "derived": "Assembled from values in the article-variable capture; query text is illustrative."
+  }
+}

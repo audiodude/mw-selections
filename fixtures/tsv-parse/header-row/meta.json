@@ -1,0 +1,6 @@
+{
+  "description": "The file MUST NOT contain a header row. A header is indistinguishable from data, so it surfaces as an invalid (non-numeric) id in column 2.",
+  "spec": [
+    "§5.1"
+  ]
+}

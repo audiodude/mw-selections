@@ -1,0 +1,23 @@
+{
+  "head": {
+    "vars": [
+      "url"
+    ]
+  },
+  "results": {
+    "bindings": [
+      {
+        "url": {
+          "type": "uri",
+          "value": "https://en.wikipedia.org/wiki/Caf%C3%A9"
+        }
+      },
+      {
+        "url": {
+          "type": "uri",
+          "value": "https://en.wikipedia.org/wiki/Statue%20of%20Liberty"
+        }
+      }
+    ]
+  }
+}

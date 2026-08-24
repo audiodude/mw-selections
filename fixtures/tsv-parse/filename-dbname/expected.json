@@ -1,0 +1,12 @@
+{
+  "status": "ok",
+  "selection": {
+    "dbname": "enwiki",
+    "pages": [
+      [
+        "Paris",
+        54321
+      ]
+    ]
+  }
+}

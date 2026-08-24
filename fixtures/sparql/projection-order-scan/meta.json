@@ -1,0 +1,14 @@
+{
+  "description": "No ?url or ?article projected: scan variables in projection order and pick the first whose binding in the FIRST result row contains the project domain. ?item (a Wikidata URI) does not match; ?page does. Non-matching rows are then dropped and counted.",
+  "spec": [
+    "§7.4"
+  ],
+  "params": {
+    "dbname": "enwiki",
+    "endpoint": "https://query.wikidata.org/sparql",
+    "query": "SELECT ?item ?page WHERE { ?page schema:about ?item . FILTER(CONTAINS(STR(?page), \"wikipedia.org\")) }"
+  },
+  "provenance": {
+    "derived": "Assembled from rows of the mixed-domain capture (Q9202 sitelinks) and the article-variable capture; reordered so an en.wikipedia.org row is first. Query text is illustrative."
+  }
+}

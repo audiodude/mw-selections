@@ -1,0 +1,6 @@
+{
+  "description": "dbname taken from an accompanying sidecar JSON file; extra sidecar fields are permitted and ignored.",
+  "spec": [
+    "§5.1"
+  ]
+}

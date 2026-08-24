@@ -1,0 +1,7 @@
+{
+  "description": "The dbname must appear in the sitematrix.",
+  "spec": [
+    "§4.2",
+    "§8"
+  ]
+}

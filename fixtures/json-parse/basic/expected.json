@@ -1,0 +1,23 @@
+{
+  "status": "ok",
+  "selection": {
+    "dbname": "enwiki",
+    "pages": [
+      "Bare_title",
+      [
+        "Statue_of_Liberty",
+        28617
+      ],
+      [
+        "Talk_page_example",
+        null,
+        1
+      ]
+    ],
+    "source": {
+      "type": "petscan",
+      "url": "https://petscan.wmcloud.org/?psid=12345678",
+      "dynamic": true
+    }
+  }
+}

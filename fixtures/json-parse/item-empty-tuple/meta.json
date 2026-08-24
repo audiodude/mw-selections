@@ -1,0 +1,7 @@
+{
+  "description": "A tuple item requires at least the item_title element.",
+  "spec": [
+    "§4.3",
+    "§5.2"
+  ]
+}

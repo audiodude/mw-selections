@@ -1,0 +1,7 @@
+{
+  "description": "The third column, when present, must be a non-negative decimal integer.",
+  "spec": [
+    "§5.1",
+    "§4.3"
+  ]
+}

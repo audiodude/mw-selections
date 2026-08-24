@@ -1,0 +1,13 @@
+{
+  "description": "Multiple columns with no page_title is an error instructing the user to alias a column (SELECT ... AS page_title). Fixtures assert the code, not the message.",
+  "spec": [
+    "§7.5"
+  ],
+  "params": {
+    "url": "https://quarry.wmcloud.org/query/90212",
+    "database": "enwiki"
+  },
+  "provenance": {
+    "derived": "Shape from the captured output."
+  }
+}

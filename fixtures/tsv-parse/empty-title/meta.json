@@ -1,0 +1,7 @@
+{
+  "description": "The first column MUST be non-null for all rows.",
+  "spec": [
+    "§5.1",
+    "§4.3"
+  ]
+}

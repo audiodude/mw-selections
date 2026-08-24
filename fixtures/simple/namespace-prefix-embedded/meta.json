@@ -1,0 +1,6 @@
+{
+  "description": "Manual items are title-only; namespace prefixes remain embedded in the title.",
+  "spec": [
+    "§7.1"
+  ]
+}

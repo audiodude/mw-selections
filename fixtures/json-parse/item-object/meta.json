@@ -1,0 +1,6 @@
+{
+  "description": "Items in the pages list are never objects.",
+  "spec": [
+    "§5.2"
+  ]
+}

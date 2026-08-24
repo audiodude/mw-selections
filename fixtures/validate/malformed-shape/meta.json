@@ -1,0 +1,7 @@
+{
+  "description": "The gate rejects malformed Selection shapes.",
+  "spec": [
+    "§5.2",
+    "§8"
+  ]
+}

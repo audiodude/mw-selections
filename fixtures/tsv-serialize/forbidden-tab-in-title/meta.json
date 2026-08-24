@@ -1,0 +1,7 @@
+{
+  "description": "Item fields MUST NOT contain tab characters; there is no valid way to escape them, so serialization must refuse.",
+  "spec": [
+    "§4.3",
+    "§5.1"
+  ]
+}

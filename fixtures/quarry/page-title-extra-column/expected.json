@@ -1,0 +1,19 @@
+{
+  "status": "ok",
+  "selection": {
+    "dbname": "enwiktionary",
+    "pages": [
+      "Category:Abuzeydabadi",
+      "Category:Abyanehi",
+      "Category:Acehnese_plants",
+      "Category:Ahkwesáhsne_Mohawk",
+      "Category:Ainu_position_nouns",
+      "Category:Akan_adbs"
+    ],
+    "source": {
+      "type": "quarry",
+      "url": "https://quarry.wmcloud.org/query/104907",
+      "dynamic": true
+    }
+  }
+}

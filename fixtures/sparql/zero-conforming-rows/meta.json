@@ -1,0 +1,15 @@
+{
+  "description": "The variable is selected by name (?article), but no row matches the target domain (dbname eswiki → es.wikipedia.org against en.wikipedia.org rows): zero conforming rows is an error.",
+  "spec": [
+    "§7.4"
+  ],
+  "params": {
+    "dbname": "eswiki",
+    "endpoint": "https://query.wikidata.org/sparql",
+    "query": "SELECT ?article WHERE {\n  VALUES ?item { wd:Q9202 wd:Q90 wd:Q60 }\n  ?article schema:about ?item ;\n           schema:isPartOf <https://en.wikipedia.org/> .\n}"
+  },
+  "provenance": {
+    "captured": "2026-08-23",
+    "request": "https://query.wikidata.org/sparql?format=json&query=<urlencoded>"
+  }
+}

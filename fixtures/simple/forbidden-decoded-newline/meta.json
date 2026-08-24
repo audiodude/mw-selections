@@ -1,0 +1,7 @@
+{
+  "description": "A percent-encoded newline (%0A) survives decoding and MUST be rejected.",
+  "spec": [
+    "§7.1",
+    "§4.3"
+  ]
+}

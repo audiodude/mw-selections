@@ -1,0 +1,6 @@
+{
+  "description": "An empty file is a valid Selection serialization with zero items.",
+  "spec": [
+    "§5.1"
+  ]
+}

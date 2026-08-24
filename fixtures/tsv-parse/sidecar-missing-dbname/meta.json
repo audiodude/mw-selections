@@ -1,0 +1,6 @@
+{
+  "description": "If a sidecar JSON file is used, it MUST contain a top-level dbname property.",
+  "spec": [
+    "§5.1"
+  ]
+}

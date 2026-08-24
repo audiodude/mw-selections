@@ -1,0 +1,7 @@
+{
+  "description": "The gate rejects tab/newline in item fields: these are the storing system’s own output guarantees when it serves TSV.",
+  "spec": [
+    "§4.3",
+    "§8"
+  ]
+}

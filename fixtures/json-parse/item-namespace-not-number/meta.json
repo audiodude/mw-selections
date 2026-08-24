@@ -1,0 +1,7 @@
+{
+  "description": "namespace_id must be a number.",
+  "spec": [
+    "§4.3",
+    "§5.2"
+  ]
+}

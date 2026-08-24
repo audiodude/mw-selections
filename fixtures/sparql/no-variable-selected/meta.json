@@ -1,0 +1,15 @@
+{
+  "description": "No ?url/?article, and no projected variable matches the domain in the first result row (even though a later row is on the target domain): variable selection fails.",
+  "spec": [
+    "§7.4"
+  ],
+  "params": {
+    "dbname": "enwiki",
+    "endpoint": "https://query.wikidata.org/sparql",
+    "query": "SELECT ?item ?page WHERE { ?page schema:about ?item . FILTER(CONTAINS(STR(?page), \"wikipedia.org\")) }"
+  },
+  "provenance": {
+    "captured": "2026-08-23",
+    "derived": "First five rows of the mixed-domain capture (Q9202 sitelinks), verbatim order: oc, pa, pap, pdc, pl wikipedias."
+  }
+}

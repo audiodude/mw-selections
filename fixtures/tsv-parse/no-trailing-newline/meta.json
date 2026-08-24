@@ -1,0 +1,6 @@
+{
+  "description": "A final newline after the last row is optional.",
+  "spec": [
+    "§5.1"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "description": "Two items may share an id; the id is never part of the uniqueness key.",
+  "spec": [
+    "§4.4"
+  ]
+}

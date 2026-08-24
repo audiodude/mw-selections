@@ -1,0 +1,7 @@
+{
+  "description": "All equivalent item spellings normalize to the canonical form: 1-tuples and null-id tuples become strings, trailing namespace 0 is dropped.",
+  "spec": [
+    "§5.2",
+    "§4.3"
+  ]
+}

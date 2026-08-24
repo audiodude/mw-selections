@@ -1,0 +1,14 @@
+{
+  "description": "The title is the URL remainder, percent-decoded, spaces replaced with underscores.",
+  "spec": [
+    "§7.4"
+  ],
+  "params": {
+    "dbname": "enwiki",
+    "endpoint": "https://query.wikidata.org/sparql",
+    "query": "SELECT ?url WHERE { ?url schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> . }"
+  },
+  "provenance": {
+    "derived": "Assembled to exercise decoding; query text is illustrative."
+  }
+}

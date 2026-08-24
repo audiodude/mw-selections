@@ -1,0 +1,13 @@
+{
+  "description": "A result set with a single column of any name is treated as a list of titles.",
+  "spec": [
+    "§7.5"
+  ],
+  "params": {
+    "url": "https://quarry.wmcloud.org/query/90211",
+    "database": "eswiki"
+  },
+  "provenance": {
+    "derived": "Shape from the captured output; titles are real eswiki pages."
+  }
+}

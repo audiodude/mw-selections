@@ -1,0 +1,6 @@
+{
+  "description": "Canonical TSV output: no header, one \\n-terminated row per item, optional trailing tabs omitted, namespace 0 omitted, title\\t\\tns for a null id with a namespace.",
+  "spec": [
+    "§5.1"
+  ]
+}

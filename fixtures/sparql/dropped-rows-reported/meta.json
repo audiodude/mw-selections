@@ -1,0 +1,14 @@
+{
+  "description": "Rows whose value does not match https://<domain>/wiki/<title> or https://<domain>/w/index.php?title=<title> MUST be dropped, and ingested/dropped counts MUST be reported.",
+  "spec": [
+    "§7.4"
+  ],
+  "params": {
+    "dbname": "enwiki",
+    "endpoint": "https://query.wikidata.org/sparql",
+    "query": "SELECT ?article WHERE { ?article schema:about wd:Q9202 . }"
+  },
+  "provenance": {
+    "derived": "Assembled from rows of the mixed-domain capture; query text is illustrative."
+  }
+}

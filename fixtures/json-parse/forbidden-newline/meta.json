@@ -1,0 +1,6 @@
+{
+  "description": "Item fields MUST NOT contain newline characters.",
+  "spec": [
+    "§4.3"
+  ]
+}

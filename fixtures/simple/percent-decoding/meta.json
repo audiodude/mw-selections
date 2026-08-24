@@ -1,0 +1,6 @@
+{
+  "description": "Percent-decoding happens after prefix stripping and before space replacement.",
+  "spec": [
+    "§7.1"
+  ]
+}

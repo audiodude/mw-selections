@@ -1,0 +1,42 @@
+{
+  "head": {
+    "vars": [
+      "article",
+      "url"
+    ]
+  },
+  "results": {
+    "bindings": [
+      {
+        "article": {
+          "type": "uri",
+          "value": "http://www.wikidata.org/entity/Q60"
+        },
+        "url": {
+          "type": "uri",
+          "value": "https://en.wikipedia.org/wiki/New_York_City"
+        }
+      },
+      {
+        "article": {
+          "type": "uri",
+          "value": "http://www.wikidata.org/entity/Q90"
+        },
+        "url": {
+          "type": "uri",
+          "value": "https://en.wikipedia.org/wiki/Paris"
+        }
+      },
+      {
+        "article": {
+          "type": "uri",
+          "value": "http://www.wikidata.org/entity/Q9202"
+        },
+        "url": {
+          "type": "uri",
+          "value": "https://en.wikipedia.org/wiki/Statue_of_Liberty"
+        }
+      }
+    ]
+  }
+}

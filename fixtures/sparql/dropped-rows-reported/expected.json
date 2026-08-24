@@ -1,0 +1,20 @@
+{
+  "status": "ok",
+  "selection": {
+    "dbname": "enwiki",
+    "pages": [
+      "Statue_of_Liberty",
+      "Paris"
+    ],
+    "source": {
+      "type": "sparql",
+      "endpoint": "https://query.wikidata.org/sparql",
+      "query": "SELECT ?article WHERE { ?article schema:about wd:Q9202 . }",
+      "dynamic": true
+    }
+  },
+  "report": {
+    "ingested": 2,
+    "dropped": 2
+  }
+}

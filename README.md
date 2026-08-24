@@ -20,16 +20,21 @@ Bare_title
 
 ## Contents
 
-- [docs/SPEC.md](docs/SPEC.md) — the Selections specification (canonical copy)
+- [docs/SPEC.md](docs/SPEC.md) — the Selections specification, v1.0.0
+  (canonical copy)
+- [fixtures/](fixtures/) — conformance fixtures: 77 language-neutral test
+  cases covering every normative rule in SPEC §4–§7, with captured upstream
+  samples ([harness contract](fixtures/README.md))
 - [docs/decision-record.md](docs/decision-record.md) — design decisions behind
   the spec and the planned implementations
 - [docs/tasks/](docs/tasks/) — task breakdown for the implementation roadmap
 
 ## Status
 
-**Specification phase.** No code yet. Planned, in order:
+**Specification + fixtures.** Planned, in order:
 
-1. Conformance fixtures — language-neutral test cases encoding the spec
+1. ~~Conformance fixtures~~ — done; see [fixtures/](fixtures/)
+   (`scripts/lint_fixtures.py` checks the tree's internal consistency)
 2. `selection-core` — isomorphic TypeScript: parsers, source mappers,
    serializers, validators
 3. `selection-picker` — a `<selection-picker>` web component any web tool can

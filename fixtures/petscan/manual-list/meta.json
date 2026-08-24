@@ -1,0 +1,14 @@
+{
+  "description": "Captured PetScan JSON for a three-page manual list on enwiki, including a Talk-namespace page. item_title, id, and namespace_id come from PetScan per-page fields; the dbname derives from the target wiki reported in the response (echoed query: language=en, project=wikipedia, manual_list_wiki=enwiki).",
+  "spec": [
+    "§7.3",
+    "§6.2"
+  ],
+  "params": {
+    "url": "https://petscan.wmcloud.org/?language=en&project=wikipedia&manual_list_wiki=enwiki&manual_list=Statue+of+Liberty%0AParis%0ATalk%3AStatue+of+Liberty&format=json&doit=1&output_compatability=catscan"
+  },
+  "provenance": {
+    "captured": "2026-08-23",
+    "request": "https://petscan.wmcloud.org/?language=en&project=wikipedia&manual_list_wiki=enwiki&manual_list=Statue+of+Liberty%0AParis%0ATalk%3AStatue+of+Liberty&format=json&doit=1&output_compatability=catscan"
+  }
+}

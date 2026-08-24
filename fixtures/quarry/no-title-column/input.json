@@ -1,0 +1,16 @@
+{
+  "headers": [
+    "title",
+    "links"
+  ],
+  "rows": [
+    [
+      "Statue_of_Liberty",
+      12
+    ],
+    [
+      "Paris",
+      7
+    ]
+  ]
+}

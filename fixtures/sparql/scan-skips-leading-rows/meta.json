@@ -1,0 +1,14 @@
+{
+  "description": "Rows that identify no variable are skipped during selection: the first two rows are on other domains, the third identifies ?page (?item, examined first in projection order, is a Wikidata URI). Skipped rows are then dropped by per-row enforcement.",
+  "spec": [
+    "§7.4"
+  ],
+  "params": {
+    "dbname": "enwiki",
+    "endpoint": "https://query.wikidata.org/sparql",
+    "query": "SELECT ?item ?page WHERE { ?page schema:about ?item . FILTER(CONTAINS(STR(?page), \"wikipedia.org\")) }"
+  },
+  "provenance": {
+    "derived": "Assembled from rows of the mixed-domain capture and the article-variable capture; query text is illustrative."
+  }
+}

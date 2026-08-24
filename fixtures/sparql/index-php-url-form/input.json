@@ -1,0 +1,23 @@
+{
+  "head": {
+    "vars": [
+      "url"
+    ]
+  },
+  "results": {
+    "bindings": [
+      {
+        "url": {
+          "type": "uri",
+          "value": "https://en.wikipedia.org/w/index.php?title=Statue_of_Liberty"
+        }
+      },
+      {
+        "url": {
+          "type": "uri",
+          "value": "https://en.wikipedia.org/wiki/Paris"
+        }
+      }
+    ]
+  }
+}

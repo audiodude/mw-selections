@@ -1,0 +1,6 @@
+{
+  "description": "Item fields MUST NOT contain tab characters.",
+  "spec": [
+    "§4.3"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "description": "A fully valid canonical Selection with provenance and producer metadata passes the structural gate.",
+  "spec": [
+    "§8",
+    "§4.1",
+    "§4.2",
+    "§4.4"
+  ]
+}

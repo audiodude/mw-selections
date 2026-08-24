@@ -1,0 +1,21 @@
+{
+  "dbname": "enwiki",
+  "pages": [
+    "Bare_title",
+    [
+      "Statue_of_Liberty",
+      28617
+    ],
+    [
+      "Statue_of_Liberty",
+      19008876,
+      1
+    ]
+  ],
+  "source": {
+    "type": "petscan",
+    "url": "https://petscan.wmcloud.org/?psid=12345678",
+    "dynamic": true
+  },
+  "name": "My list"
+}

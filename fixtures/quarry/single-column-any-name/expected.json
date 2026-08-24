@@ -1,0 +1,15 @@
+{
+  "status": "ok",
+  "selection": {
+    "dbname": "eswiki",
+    "pages": [
+      "Estatua_de_la_Libertad",
+      "París"
+    ],
+    "source": {
+      "type": "quarry",
+      "url": "https://quarry.wmcloud.org/query/90211",
+      "dynamic": true
+    }
+  }
+}

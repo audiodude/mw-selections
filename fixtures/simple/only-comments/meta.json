@@ -1,0 +1,6 @@
+{
+  "description": "Input reducing to nothing yields an empty item list, not an error.",
+  "spec": [
+    "§7.1"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "description": "The gate rejects (never fixes) duplicates on (item_title, namespace_id).",
+  "spec": [
+    "§4.4",
+    "§8"
+  ]
+}

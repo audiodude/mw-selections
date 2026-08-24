@@ -1,0 +1,9 @@
+{
+  "description": "Both filename and sidecar carry a dbname: the sidecar (explicit metadata) wins over the filename convention. Fixture-pinned interpretation.",
+  "spec": [
+    "§5.1"
+  ],
+  "params": {
+    "filename": "list.enwiki.tsv"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "description": "The source type value space is open: an unrecognized type is valid (consumers treat it as static, SPEC §6.1).",
+  "spec": [
+    "§6.1",
+    "§8"
+  ]
+}

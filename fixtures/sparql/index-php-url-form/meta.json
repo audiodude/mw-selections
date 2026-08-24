@@ -1,0 +1,14 @@
+{
+  "description": "Both accepted URL shapes: /wiki/<title> and /w/index.php?title=<title>.",
+  "spec": [
+    "§7.4"
+  ],
+  "params": {
+    "dbname": "enwiki",
+    "endpoint": "https://query.wikidata.org/sparql",
+    "query": "SELECT ?url WHERE { ?url schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> . }"
+  },
+  "provenance": {
+    "derived": "Assembled from values in the article-variable capture; query text is illustrative."
+  }
+}

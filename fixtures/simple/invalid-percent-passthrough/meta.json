@@ -1,0 +1,6 @@
+{
+  "description": "Byte sequences that are not valid percent escapes pass through verbatim; decoding must not fail. Fixture-pinned interpretation.",
+  "spec": [
+    "§7.1"
+  ]
+}

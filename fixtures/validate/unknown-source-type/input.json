@@ -1,0 +1,10 @@
+{
+  "dbname": "enwiki",
+  "pages": [
+    "Paris"
+  ],
+  "source": {
+    "type": "pagepile",
+    "pile_id": 384607
+  }
+}

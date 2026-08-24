@@ -1,0 +1,7 @@
+{
+  "description": "A Selection REQUIRES a dbname.",
+  "spec": [
+    "§4.1",
+    "§8"
+  ]
+}

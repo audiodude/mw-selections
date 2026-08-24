@@ -1,0 +1,13 @@
+{
+  "description": "The full MediaWiki column convention: page_title, page_id, page_namespace map to item_title, id, namespace_id. A database reported with the replica _p suffix maps to the bare dbname.",
+  "spec": [
+    "§7.5"
+  ],
+  "params": {
+    "url": "https://quarry.wmcloud.org/query/90210",
+    "database": "enwiki_p"
+  },
+  "provenance": {
+    "derived": "Shape from the captured output; row values are real enwiki pages (ids match the PetScan capture)."
+  }
+}

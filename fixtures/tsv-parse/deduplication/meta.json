@@ -1,0 +1,6 @@
+{
+  "description": "Duplicates on (item_title, namespace_id) — absent namespace ≡ 0, id never part of the key — collapse to the first occurrence during ingestion. Boundary operations (json-parse, validate) reject instead.",
+  "spec": [
+    "§4.4"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "description": "Two items with the same item_title but different namespace_id are completely acceptable.",
+  "spec": [
+    "§4.4"
+  ]
+}

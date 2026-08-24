@@ -1,0 +1,26 @@
+{
+  "status": "ok",
+  "selection": {
+    "dbname": "enwiki",
+    "pages": [
+      [
+        "Statue_of_Liberty",
+        28617
+      ],
+      [
+        "Paris",
+        22989
+      ],
+      [
+        "Statue_of_Liberty",
+        19008876,
+        1
+      ]
+    ],
+    "source": {
+      "type": "quarry",
+      "url": "https://quarry.wmcloud.org/query/90210",
+      "dynamic": true
+    }
+  }
+}

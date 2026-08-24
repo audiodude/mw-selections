@@ -1,0 +1,7 @@
+{
+  "description": "Producers MAY attach additional metadata; unknown top-level and source fields must survive parsing verbatim.",
+  "spec": [
+    "§5.2",
+    "§6.1"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "description": "item_title must be a string.",
+  "spec": [
+    "§4.3",
+    "§5.2"
+  ]
+}

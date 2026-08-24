@@ -1,0 +1,15 @@
+{
+  "description": "Captured Quarry output: a page_title column plus an unrelated column. page_title provides title-only items; other columns are ignored. dbname comes from the run metadata (query_database: enwiktionary), never from user input.",
+  "spec": [
+    "§7.5",
+    "§6.2"
+  ],
+  "params": {
+    "url": "https://quarry.wmcloud.org/query/104907",
+    "database": "enwiktionary"
+  },
+  "provenance": {
+    "captured": "2026-08-23",
+    "request": "https://quarry.wmcloud.org/run/1141735/output/0/json (rows trimmed to 6); database from https://quarry.wmcloud.org/run/1141735/meta"
+  }
+}

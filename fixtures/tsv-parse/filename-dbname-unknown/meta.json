@@ -1,0 +1,10 @@
+{
+  "description": "Penultimate filename segment is not a sitematrix dbname: no dbname is resolved (the ingesting UI must obtain one from the user, SPEC §7.2). Not an error.",
+  "spec": [
+    "§5.1",
+    "§7.2"
+  ],
+  "params": {
+    "filename": "notes.backup.swiki"
+  }
+}

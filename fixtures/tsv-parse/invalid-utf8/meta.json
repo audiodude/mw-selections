@@ -1,0 +1,6 @@
+{
+  "description": "Bytes that are not valid UTF-8 are rejected.",
+  "spec": [
+    "§5.1"
+  ]
+}

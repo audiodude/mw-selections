@@ -1,0 +1,7 @@
+{
+  "description": "A percent-encoded tab (%09) survives decoding and MUST be rejected: this is why rejection happens after decoding.",
+  "spec": [
+    "§7.1",
+    "§4.3"
+  ]
+}

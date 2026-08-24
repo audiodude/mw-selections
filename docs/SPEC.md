@@ -1,6 +1,6 @@
 # Selections
 
-**Status:** Draft 0.1
+**Status:** Version 1.0.0
 
 **Editor:** Travis Briggs ([User:Audiodude](https://en.wikipedia.org/wiki/User:Audiodude) \<audiodude@gmail.com\>), in association with [Kiwix](https://kiwix.org)
 
@@ -335,9 +335,13 @@ never from user input.
 1. The `dbname` is a REQUIRED user input alongside the query; the project
    domain (e.g. `en.wikipedia.org`) is derived from it via the sitematrix.
 2. Result variable selection: if a variable named `?url` or `?article` is
-   projected, use it (in that priority order). Otherwise scan the projected
-   variables in SELECT projection order and choose the first whose binding in
-   the first result row contains the project domain as a substring.
+   projected, use it (in that priority order). Otherwise, scan the result
+   rows in order and choose a variable from the first row that identifies
+   one: within a row, the projected variables are examined in SELECT
+   projection order, and a variable is identified if the row's binding for
+   it contains the project domain as a substring. Rows that identify no
+   variable are skipped (rule 3 drops them regardless); if no row
+   identifies a variable, that is an error.
 3. Per-row enforcement: every row's value for the chosen variable MUST match
    `https://<domain>/wiki/<title>` or
    `https://<domain>/w/index.php?title=<title>`. Non-matching rows MUST be
@@ -413,3 +417,11 @@ Deviations from the source document, *"WP1 — The Source for Selections"*:
    mapping rules (§7) and the validation-responsibility split (§8), per the
    project decision record
    ([docs/decision-record.md](decision-record.md)).
+5. **SPARQL variable selection scans all rows** (§7.4 rule 2, revised for
+   v1.0.0). Draft 0.1 examined only the first result row, so a single
+   non-compliant leading row (e.g. a sitelink on another wiki) failed
+   variable selection even when later rows were on the target project —
+   the same failure mode as the row-0 sampling defect filed as
+   [openzim/wp1#1262](https://github.com/openzim/wp1/issues/1262).
+   Non-identifying rows are now skipped during selection; per-row
+   enforcement (rule 3) drops them from the result regardless.

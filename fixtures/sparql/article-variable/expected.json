@@ -1,0 +1,21 @@
+{
+  "status": "ok",
+  "selection": {
+    "dbname": "enwiki",
+    "pages": [
+      "New_York_City",
+      "Paris",
+      "Statue_of_Liberty"
+    ],
+    "source": {
+      "type": "sparql",
+      "endpoint": "https://query.wikidata.org/sparql",
+      "query": "SELECT ?article WHERE {\n  VALUES ?item { wd:Q9202 wd:Q90 wd:Q60 }\n  ?article schema:about ?item ;\n           schema:isPartOf <https://en.wikipedia.org/> .\n}",
+      "dynamic": true
+    }
+  },
+  "report": {
+    "ingested": 3,
+    "dropped": 0
+  }
+}

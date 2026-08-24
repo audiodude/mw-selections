@@ -1,0 +1,6 @@
+{
+  "description": "A blank line inside the file is a row with an empty title. Only a single final newline is tolerated.",
+  "spec": [
+    "§5.1"
+  ]
+}

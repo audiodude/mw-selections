@@ -1,0 +1,20 @@
+{
+  "dbname": "enwiki",
+  "pages": [
+    "Bare_title",
+    [
+      "Statue_of_Liberty",
+      28617,
+      0
+    ],
+    [
+      "Paris",
+      54321
+    ],
+    [
+      "Talk_page_example",
+      null,
+      1
+    ]
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "description": "The four-row example from SPEC §5.1: full tuple, title+id, title with namespace but no id, bare title. Explicit namespace 0 canonicalizes to absent.",
+  "spec": [
+    "§5.1",
+    "§4.3"
+  ]
+}

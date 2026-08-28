@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { Sitematrix } from "../src/sitematrix.js";
 import { parseSelectionJson } from "../src/json.js";
+import { mapPetscan } from "../src/petscan.js";
 import { normalizeManualText } from "../src/simple.js";
 import { parseTsv, serializeTsv } from "../src/tsv.js";
 import { validateSelection } from "../src/validate.js";
@@ -48,7 +49,7 @@ function envelope<T>(result: Result<T>, shape: (value: T) => Record<string, unkn
 
 // Grows as operations are implemented (Tasks 3-8). tsv-serialize is handled
 // separately below because its ok-cases compare bytes, not JSON.
-const SUPPORTED_OPS: string[] = ["json-parse", "simple", "tsv-parse", "validate"];
+const SUPPORTED_OPS: string[] = ["json-parse", "petscan", "simple", "tsv-parse", "validate"];
 
 const runners: Record<string, (c: Case) => unknown> = {
   simple: (c) =>
@@ -76,6 +77,14 @@ const runners: Record<string, (c: Case) => unknown> = {
     })),
   validate: (c) =>
     envelope(validateSelection(readFileSync(join(c.dir, "input.json")), sitematrix), () => ({})),
+  petscan: (c) =>
+    envelope(
+      mapPetscan(JSON.parse(readFileSync(join(c.dir, "input.json"), "utf8")), {
+        url: c.meta.params!["url"]!,
+        sitematrix,
+      }),
+      (v) => ({ selection: v }),
+    ),
 };
 
 for (const op of SUPPORTED_OPS) {

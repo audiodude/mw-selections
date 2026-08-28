@@ -1,3 +1,4 @@
+import { defaultFetch, fetchJsonCapped, type FetchDeps } from "./http.js";
 import { canonicalItem, Deduper } from "./items.js";
 import type { Sitematrix } from "./sitematrix.js";
 import { err, ok, type Result } from "./types.js";
@@ -73,4 +74,27 @@ function dbnameFromEchoedQuery(query: string, sitematrix: Sitematrix): Result<st
   const manualListWiki = params.get("manual_list_wiki");
   if (manualListWiki !== null) return ok(manualListWiki);
   return err("UPSTREAM_SHAPE", "cannot derive dbname from PetScan response");
+}
+
+/**
+ * Fetch a PetScan query's JSON output and map it (SPEC §7.3). The fetch URL
+ * forces format=json, catscan output compatibility (the shape mapPetscan
+ * reads), and doit=1; source.url keeps the user's URL verbatim.
+ */
+export async function fetchPetscanSelection(
+  url: string,
+  opts: { sitematrix: Sitematrix } & FetchDeps,
+): Promise<Result<Selection>> {
+  let fetchUrl: URL;
+  try {
+    fetchUrl = new URL(url);
+  } catch {
+    return err("UPSTREAM_SHAPE", `not a URL: ${url}`);
+  }
+  fetchUrl.searchParams.set("format", "json");
+  fetchUrl.searchParams.set("output_compatability", "catscan");
+  fetchUrl.searchParams.set("doit", "1");
+  const json = await fetchJsonCapped(opts.fetch ?? defaultFetch(), fetchUrl.toString());
+  if (!json.ok) return json;
+  return mapPetscan(json.value, { url, sitematrix: opts.sitematrix });
 }

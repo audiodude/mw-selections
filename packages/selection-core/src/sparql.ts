@@ -1,3 +1,4 @@
+import { defaultFetch, fetchJsonCapped, type FetchDeps } from "./http.js";
 import { canonicalItem, Deduper, hasForbiddenChar } from "./items.js";
 import type { Sitematrix } from "./sitematrix.js";
 import { dbStyle, percentDecodeLenient } from "./text.js";
@@ -105,4 +106,34 @@ function selectVariable(vars: string[], rows: SparqlRow[], domain: string): stri
     }
   }
   return undefined;
+}
+
+const WDQS_HOSTS = new Set(["query.wikidata.org"]);
+
+export const API_USER_AGENT =
+  "selection-core/0.1 (https://github.com/audiodude/mw-selections)";
+
+/**
+ * Run a SPARQL query (GET, format=json) and map the results (SPEC §7.4).
+ * Api-User-Agent is sent to WDQS only — it is CORS-allowlisted there and
+ * unverified elsewhere (decision record #3).
+ */
+export async function fetchSparqlSelection(
+  opts: { dbname: string; endpoint: string; query: string; sitematrix: Sitematrix } & FetchDeps,
+): Promise<Result<{ selection: Selection; report: SparqlReport }>> {
+  let url: URL;
+  try {
+    url = new URL(opts.endpoint);
+  } catch {
+    return err("UPSTREAM_SHAPE", `not a URL: ${opts.endpoint}`);
+  }
+  const headers: Record<string, string> = { Accept: "application/sparql-results+json" };
+  if (WDQS_HOSTS.has(url.host)) headers["Api-User-Agent"] = API_USER_AGENT;
+  // searchParams, not string concatenation: an endpoint already carrying a
+  // query string (e.g. ...?key=abc) must stay valid.
+  url.searchParams.set("format", "json");
+  url.searchParams.set("query", opts.query);
+  const json = await fetchJsonCapped(opts.fetch ?? defaultFetch(), url.toString(), { headers });
+  if (!json.ok) return json;
+  return mapSparql(json.value, opts);
 }

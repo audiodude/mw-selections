@@ -1,3 +1,4 @@
+import { defaultFetch, fetchJsonCapped, type FetchDeps } from "./http.js";
 import { canonicalItem, Deduper } from "./items.js";
 import { err, ok, type Result } from "./types.js";
 import type { Selection } from "./types.js";
@@ -61,4 +62,43 @@ export function mapQuarry(response: unknown, opts: MapQuarryOptions): Result<Sel
     pages,
     source: { type: "quarry", url: opts.url, dynamic: true },
   });
+}
+
+const QUARRY_QUERY_URL = /^https:\/\/([^/]+)\/query\/(\d+)/;
+
+/**
+ * Resolve a Quarry query URL to its latest run's output and map it
+ * (SPEC §7.5). Verified against the live API 2026-08-26:
+ * GET /query/<id>/meta → { latest_rev: { query_database }, latest_run: { id, status } };
+ * GET /run/<run_id>/output/0/json → { headers, rows } (ACAO: *).
+ */
+export async function fetchQuarrySelection(
+  url: string,
+  opts: FetchDeps = {},
+): Promise<Result<Selection>> {
+  const match = QUARRY_QUERY_URL.exec(url);
+  if (match === null) return err("UPSTREAM_SHAPE", `not a Quarry query URL: ${url}`);
+  const host = match[1]!;
+  const queryId = match[2]!;
+  const fetch = opts.fetch ?? defaultFetch();
+
+  const meta = await fetchJsonCapped(fetch, `https://${host}/query/${queryId}/meta`);
+  if (!meta.ok) return meta;
+  const m = meta.value as {
+    latest_run?: { id?: unknown; status?: unknown };
+    latest_rev?: { query_database?: unknown };
+  } | null;
+  const runId = m?.latest_run?.id;
+  const status = m?.latest_run?.status;
+  const database = m?.latest_rev?.query_database;
+  if (typeof runId !== "number" || typeof database !== "string") {
+    return err("UPSTREAM_SHAPE", "Quarry meta lacks latest_run.id or query_database");
+  }
+  if (status !== "complete") {
+    return err("QUARRY_RUN_NOT_READY", `latest Quarry run status is ${String(status)}`);
+  }
+
+  const output = await fetchJsonCapped(fetch, `https://${host}/run/${runId}/output/0/json`);
+  if (!output.ok) return output;
+  return mapQuarry(output.value, { url, database });
 }

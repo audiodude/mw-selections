@@ -3,8 +3,10 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { Sitematrix } from "../src/sitematrix.js";
+import { parseSelectionJson } from "../src/json.js";
 import { normalizeManualText } from "../src/simple.js";
 import { parseTsv, serializeTsv } from "../src/tsv.js";
+import { validateSelection } from "../src/validate.js";
 import type { JsonValue, Result } from "../src/types.js";
 
 const FIXTURES = fileURLToPath(new URL("../../../fixtures", import.meta.url));
@@ -46,7 +48,7 @@ function envelope<T>(result: Result<T>, shape: (value: T) => Record<string, unkn
 
 // Grows as operations are implemented (Tasks 3-8). tsv-serialize is handled
 // separately below because its ok-cases compare bytes, not JSON.
-const SUPPORTED_OPS: string[] = ["simple", "tsv-parse"];
+const SUPPORTED_OPS: string[] = ["json-parse", "simple", "tsv-parse", "validate"];
 
 const runners: Record<string, (c: Case) => unknown> = {
   simple: (c) =>
@@ -68,6 +70,12 @@ const runners: Record<string, (c: Case) => unknown> = {
       (v) => ({ selection: v }),
     );
   },
+  "json-parse": (c) =>
+    envelope(parseSelectionJson(readFileSync(join(c.dir, "input.json"))), (v) => ({
+      selection: v,
+    })),
+  validate: (c) =>
+    envelope(validateSelection(readFileSync(join(c.dir, "input.json")), sitematrix), () => ({})),
 };
 
 for (const op of SUPPORTED_OPS) {

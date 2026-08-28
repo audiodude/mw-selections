@@ -1,6 +1,6 @@
 # mw-selections
 
-A specification — and, soon, reference implementations — for **Selections**:
+A specification — and reference implementations — for **Selections**:
 portable lists of items (articles, pages) from a single Wikimedia project.
 
 Lists of articles are the most commonly produced and shared data artifact in
@@ -31,12 +31,14 @@ Bare_title
 
 ## Status
 
-**Specification + fixtures.** Planned, in order:
+**Specification + fixtures + core library.** Planned, in order:
 
 1. ~~Conformance fixtures~~ — done; see [fixtures/](fixtures/)
    (`scripts/lint_fixtures.py` checks the tree's internal consistency)
-2. `selection-core` — isomorphic TypeScript: parsers, source mappers,
-   serializers, validators
+2. ~~`selection-core`~~ — done; see
+   [packages/selection-core/](packages/selection-core/) — isomorphic
+   TypeScript: parsers, source mappers, serializers, validators; passes all
+   77 conformance fixtures (`npm test`)
 3. `selection-picker` — a `<selection-picker>` web component any web tool can
    embed to let users create Selections from manual entry, `.swiki` upload,
    PetScan, SPARQL, or Quarry

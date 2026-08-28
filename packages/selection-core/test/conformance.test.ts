@@ -2,15 +2,18 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
-import { Sitematrix } from "../src/sitematrix.js";
-import { parseSelectionJson } from "../src/json.js";
-import { mapPetscan } from "../src/petscan.js";
-import { mapQuarry } from "../src/quarry.js";
-import { normalizeManualText } from "../src/simple.js";
-import { mapSparql } from "../src/sparql.js";
-import { parseTsv, serializeTsv } from "../src/tsv.js";
-import { validateSelection } from "../src/validate.js";
-import type { JsonValue, Result } from "../src/types.js";
+import {
+  mapPetscan,
+  mapQuarry,
+  mapSparql,
+  normalizeManualText,
+  parseSelectionJson,
+  parseTsv,
+  serializeTsv,
+  Sitematrix,
+  validateSelection,
+} from "../src/index.js";
+import type { JsonValue, Result } from "../src/index.js";
 
 const FIXTURES = fileURLToPath(new URL("../../../fixtures", import.meta.url));
 

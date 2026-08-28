@@ -6,6 +6,7 @@ import { Sitematrix } from "../src/sitematrix.js";
 import { parseSelectionJson } from "../src/json.js";
 import { mapPetscan } from "../src/petscan.js";
 import { normalizeManualText } from "../src/simple.js";
+import { mapSparql } from "../src/sparql.js";
 import { parseTsv, serializeTsv } from "../src/tsv.js";
 import { validateSelection } from "../src/validate.js";
 import type { JsonValue, Result } from "../src/types.js";
@@ -49,7 +50,14 @@ function envelope<T>(result: Result<T>, shape: (value: T) => Record<string, unkn
 
 // Grows as operations are implemented (Tasks 3-8). tsv-serialize is handled
 // separately below because its ok-cases compare bytes, not JSON.
-const SUPPORTED_OPS: string[] = ["json-parse", "petscan", "simple", "tsv-parse", "validate"];
+const SUPPORTED_OPS: string[] = [
+  "json-parse",
+  "petscan",
+  "simple",
+  "sparql",
+  "tsv-parse",
+  "validate",
+];
 
 const runners: Record<string, (c: Case) => unknown> = {
   simple: (c) =>
@@ -84,6 +92,16 @@ const runners: Record<string, (c: Case) => unknown> = {
         sitematrix,
       }),
       (v) => ({ selection: v }),
+    ),
+  sparql: (c) =>
+    envelope(
+      mapSparql(JSON.parse(readFileSync(join(c.dir, "input.json"), "utf8")), {
+        dbname: c.meta.params!["dbname"]!,
+        endpoint: c.meta.params!["endpoint"]!,
+        query: c.meta.params!["query"]!,
+        sitematrix,
+      }),
+      (v) => ({ selection: v.selection, report: v.report }),
     ),
 };
 

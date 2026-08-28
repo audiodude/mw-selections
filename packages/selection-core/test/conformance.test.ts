@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { Sitematrix } from "../src/sitematrix.js";
 import { normalizeManualText } from "../src/simple.js";
+import { parseTsv, serializeTsv } from "../src/tsv.js";
 import type { JsonValue, Result } from "../src/types.js";
 
 const FIXTURES = fileURLToPath(new URL("../../../fixtures", import.meta.url));
@@ -45,13 +46,28 @@ function envelope<T>(result: Result<T>, shape: (value: T) => Record<string, unkn
 
 // Grows as operations are implemented (Tasks 3-8). tsv-serialize is handled
 // separately below because its ok-cases compare bytes, not JSON.
-const SUPPORTED_OPS: string[] = ["simple"];
+const SUPPORTED_OPS: string[] = ["simple", "tsv-parse"];
 
 const runners: Record<string, (c: Case) => unknown> = {
   simple: (c) =>
     envelope(normalizeManualText(readFileSync(join(c.dir, "input.txt"), "utf8")), (v) => ({
       selection: v,
     })),
+  "tsv-parse": (c) => {
+    const sidecarPath = join(c.dir, "sidecar.json");
+    const sidecar = existsSync(sidecarPath)
+      ? (JSON.parse(readFileSync(sidecarPath, "utf8")) as unknown)
+      : undefined;
+    const filename = c.meta.params?.["filename"];
+    return envelope(
+      parseTsv(readFileSync(join(c.dir, "input.swiki")), {
+        ...(filename !== undefined ? { filename } : {}),
+        ...(sidecar !== undefined ? { sidecar: sidecar as JsonValue } : {}),
+        sitematrix,
+      }),
+      (v) => ({ selection: v }),
+    );
+  },
 };
 
 for (const op of SUPPORTED_OPS) {
@@ -67,6 +83,28 @@ for (const op of SUPPORTED_OPS) {
     }
   });
 }
+
+describe("tsv-serialize", () => {
+  for (const c of casesFor("tsv-serialize")) {
+    test(c.name, () => {
+      const result = serializeTsv(
+        JSON.parse(readFileSync(join(c.dir, "input.json"), "utf8")),
+      );
+      const expectedSwiki = join(c.dir, "expected.swiki");
+      if (existsSync(expectedSwiki)) {
+        expect(result.ok, JSON.stringify(result)).toBe(true);
+        if (result.ok) {
+          // byte-exact comparison (fixtures/README.md "Canonical TSV form")
+          expect(Buffer.from(result.value)).toEqual(readFileSync(expectedSwiki));
+        }
+      } else {
+        const expected = JSON.parse(readFileSync(join(c.dir, "expected.json"), "utf8"));
+        expect(result.ok).toBe(false);
+        if (!result.ok) expect(result.error.code).toBe(expected.code);
+      }
+    });
+  }
+});
 
 test("fixture discovery finds every operation directory", () => {
   const ops = readdirSync(FIXTURES, { withFileTypes: true })

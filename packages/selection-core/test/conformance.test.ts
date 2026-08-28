@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 import { Sitematrix } from "../src/sitematrix.js";
 import { parseSelectionJson } from "../src/json.js";
 import { mapPetscan } from "../src/petscan.js";
+import { mapQuarry } from "../src/quarry.js";
 import { normalizeManualText } from "../src/simple.js";
 import { mapSparql } from "../src/sparql.js";
 import { parseTsv, serializeTsv } from "../src/tsv.js";
@@ -53,6 +54,7 @@ function envelope<T>(result: Result<T>, shape: (value: T) => Record<string, unkn
 const SUPPORTED_OPS: string[] = [
   "json-parse",
   "petscan",
+  "quarry",
   "simple",
   "sparql",
   "tsv-parse",
@@ -103,6 +105,14 @@ const runners: Record<string, (c: Case) => unknown> = {
       }),
       (v) => ({ selection: v.selection, report: v.report }),
     ),
+  quarry: (c) =>
+    envelope(
+      mapQuarry(JSON.parse(readFileSync(join(c.dir, "input.json"), "utf8")), {
+        url: c.meta.params!["url"]!,
+        database: c.meta.params!["database"]!,
+      }),
+      (v) => ({ selection: v }),
+    ),
 };
 
 for (const op of SUPPORTED_OPS) {
@@ -141,19 +151,12 @@ describe("tsv-serialize", () => {
   }
 });
 
-test("fixture discovery finds every operation directory", () => {
+test("every fixture operation on disk is run by this harness", () => {
   const ops = readdirSync(FIXTURES, { withFileTypes: true })
     .filter((d) => d.isDirectory())
     .map((d) => d.name)
     .sort();
-  expect(ops).toEqual([
-    "json-parse",
-    "petscan",
-    "quarry",
-    "simple",
-    "sparql",
-    "tsv-parse",
-    "tsv-serialize",
-    "validate",
-  ]);
+  const covered = [...SUPPORTED_OPS, "tsv-serialize"].sort();
+  expect(covered).toEqual(ops);
+  expect(ops.flatMap((op) => casesFor(op)).length).toBe(77);
 });

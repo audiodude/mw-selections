@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { Sitematrix } from "../src/sitematrix.js";
+import { normalizeManualText } from "../src/simple.js";
 import type { JsonValue, Result } from "../src/types.js";
 
 const FIXTURES = fileURLToPath(new URL("../../../fixtures", import.meta.url));
@@ -44,9 +45,14 @@ function envelope<T>(result: Result<T>, shape: (value: T) => Record<string, unkn
 
 // Grows as operations are implemented (Tasks 3-8). tsv-serialize is handled
 // separately below because its ok-cases compare bytes, not JSON.
-const SUPPORTED_OPS: string[] = [];
+const SUPPORTED_OPS: string[] = ["simple"];
 
-const runners: Record<string, (c: Case) => unknown> = {};
+const runners: Record<string, (c: Case) => unknown> = {
+  simple: (c) =>
+    envelope(normalizeManualText(readFileSync(join(c.dir, "input.txt"), "utf8")), (v) => ({
+      selection: v,
+    })),
+};
 
 for (const op of SUPPORTED_OPS) {
   describe(op, () => {

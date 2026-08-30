@@ -86,3 +86,6 @@ and `bubbles` are this package's additions — task 03 specifies only
   one `<script type="module">`, one element, no bundler, live sitematrix
   fetch, emitted Selection `{dbname: "enwiki", pages: [...],
   source: {type: "simple"}}`.
+- The third acceptance bullet — the manual creation-flow smoke test in the
+  WP1 dev frontend — is deferred to the WP1 integration work (roadmap
+  item 5) and is not covered by this repository's gates.

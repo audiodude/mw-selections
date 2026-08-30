@@ -5,7 +5,14 @@ import type { Selection } from "@audiodude/selection-core";
 import "../src/index.js";
 import type { SelectionPicker } from "../src/selection-picker.js";
 import { resetSitematrixCache } from "../src/sitematrix-source.js";
-import { fakeFetch, FIXTURES, readFixtureJson, setValue, type Route } from "./helpers.js";
+import {
+  fakeFetch,
+  FIXTURES,
+  readFixtureJson,
+  setValue,
+  type RecordingFetch,
+  type Route,
+} from "./helpers.js";
 
 const sitematrixRoute: Route = {
   match: "action=sitematrix",
@@ -295,4 +302,73 @@ test("a malformed cap attribute is a loud host error, not a silently disabled ca
   const el = mount(`dbname="enwiki" max-items="abc"`);
   await el.updateComplete;
   expect(() => el.open()).toThrow(/max-items/);
+});
+
+test("open() from inside the selection listener starts a fresh, usable session", async () => {
+  const el = mount(`dbname="enwiki"`);
+  let second: Promise<Selection> | undefined;
+  el.addEventListener(
+    "selection",
+    () => {
+      second = el.open();
+    },
+    { once: true },
+  );
+
+  const first = el.open();
+  await settle(el);
+  setValue(shadow<HTMLTextAreaElement>(el, "textarea[part=manual]"), "Paris");
+  await click(el, "button[part=load]");
+  await click(el, "button[part=confirm]");
+
+  await expect(first).resolves.toMatchObject({ dbname: "enwiki" });
+  await settle(el);
+  // The first session's close must not have aborted the second one.
+  expect(shadow<HTMLDialogElement>(el, "dialog").open).toBe(true);
+  let aborted = false;
+  second?.catch(() => {
+    aborted = true;
+  });
+  await settle(el);
+  expect(aborted).toBe(false);
+  shadow<HTMLDialogElement>(el, "dialog").close();
+  await expect(second).rejects.toMatchObject({ name: "AbortError" });
+});
+
+test("two rapid Load clicks issue a single upstream fetch", async () => {
+  const meta = readFixtureJson("petscan", "manual-list", "meta.json");
+  const el = mount(`dbname="enwiki"`, [
+    { match: "petscan.wmcloud.org", json: readFixtureJson("petscan", "manual-list", "input.json") },
+  ]);
+
+  void el.open();
+  await settle(el);
+  await click(el, "nav button[data-mode=petscan]");
+  setValue(shadow<HTMLInputElement>(el, "input[part=petscan-url]"), meta.params.url);
+  const load = shadow<HTMLButtonElement>(el, "button[part=load]");
+  load.click();
+  load.click(); // before the busy re-render disables the button
+  await settle(el);
+
+  const calls = (el.fetchImpl as RecordingFetch).calls;
+  expect(calls.filter((url) => url.includes("petscan.wmcloud.org"))).toHaveLength(1);
+  expect(el.renderRoot.querySelectorAll("p[part=summary]")).toHaveLength(1);
+});
+
+test("removing the element mid-session rejects with AbortError; a reconnect can reopen", async () => {
+  const el = mount(`dbname="enwiki"`);
+  const pending = el.open();
+  await settle(el);
+
+  el.remove();
+  await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+  expect(shadow<HTMLDialogElement>(el, "dialog").open).toBe(false);
+
+  document.body.append(el);
+  await el.updateComplete;
+  const second = el.open();
+  await settle(el);
+  expect(shadow<HTMLDialogElement>(el, "dialog").open).toBe(true);
+  shadow<HTMLDialogElement>(el, "dialog").close();
+  await expect(second).rejects.toMatchObject({ name: "AbortError" });
 });

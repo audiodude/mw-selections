@@ -35,8 +35,11 @@ export interface Route {
   status?: number;
 }
 
+/** A fetch stub that records every requested URL. */
+export type RecordingFetch = FetchLike & { calls: string[] };
+
 /** A FetchLike over fixed routes; unmatched URLs answer 404. */
-export function fakeFetch(routes: Route[]): FetchLike & { calls: string[] } {
+export function fakeFetch(routes: Route[]): RecordingFetch {
   const calls: string[] = [];
   const fetch = ((url: string) => {
     calls.push(url);
@@ -59,7 +62,7 @@ export function fakeFetch(routes: Route[]): FetchLike & { calls: string[] } {
       status,
       body,
     } as unknown as ResponseLike);
-  }) as FetchLike & { calls: string[] };
+  }) as RecordingFetch;
   fetch.calls = calls;
   return fetch;
 }

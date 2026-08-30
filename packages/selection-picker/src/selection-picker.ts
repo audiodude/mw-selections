@@ -190,17 +190,19 @@ export class SelectionPicker extends LitElement {
   }
 
   async #load(): Promise<void> {
+    if (this._busy) return; // a second Load must not race the first
     const sitematrix = this.#sitematrix;
     if (sitematrix === undefined) return;
-    const allowlist = parseAllowlist(this.dbname);
-    const input = await this.#buildInput(allowlist, sitematrix);
-    if (input === undefined) {
-      this._error = STRINGS.noFileChosen;
-      return;
-    }
     this._busy = true;
     this._error = undefined;
     this._outcome = undefined;
+    const allowlist = parseAllowlist(this.dbname);
+    const input = await this.#buildInput(allowlist, sitematrix);
+    if (input === undefined) {
+      this._busy = false;
+      this._error = STRINGS.noFileChosen;
+      return;
+    }
     const result = await ingest(input, {
       sitematrix,
       fetch: this.#fetch,
@@ -261,6 +263,10 @@ export class SelectionPicker extends LitElement {
     const resolve = this.#resolve;
     this.#resolve = undefined;
     this.#reject = undefined; // closing must not also reject
+    // Close before dispatching: a host that calls open() from its
+    // `selection` listener must get a fresh session, not one immediately
+    // aborted by this session's close event.
+    this.#dialog.close();
     this.dispatchEvent(
       new CustomEvent<Selection>("selection", {
         detail: outcome.selection,
@@ -269,10 +275,25 @@ export class SelectionPicker extends LitElement {
       }),
     );
     resolve?.(outcome.selection);
-    this.#dialog.close();
   }
 
   #onClose(): void {
+    this.#abort();
+  }
+
+  /**
+   * Removal from the document is cancellation: the dialog leaves the top
+   * layer, so the session can never complete. Rejecting here (and closing
+   * the dialog) leaves a reconnected element free to open() again.
+   */
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    const dialog = this.renderRoot?.querySelector("dialog");
+    if (dialog?.open) dialog.close();
+    this.#abort();
+  }
+
+  #abort(): void {
     const reject = this.#reject;
     this.#resolve = undefined;
     this.#reject = undefined;

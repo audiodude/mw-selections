@@ -25,13 +25,19 @@ Bare_title
 - [fixtures/](fixtures/) — conformance fixtures: 77 language-neutral test
   cases covering every normative rule in SPEC §4–§7, with captured upstream
   samples ([harness contract](fixtures/README.md))
+- [packages/selection-core/](packages/selection-core/) — isomorphic
+  TypeScript implementation of the spec: parsers, source mappers,
+  serializers, validators
+- [packages/selection-picker/](packages/selection-picker/) — the
+  `<selection-picker>` web component any web tool can embed
 - [docs/decision-record.md](docs/decision-record.md) — design decisions behind
   the spec and the planned implementations
 - [docs/tasks/](docs/tasks/) — task breakdown for the implementation roadmap
 
 ## Status
 
-**Specification + fixtures + core library.** Planned, in order:
+**Specification + fixtures + core library + picker widget.** Planned, in
+order:
 
 1. ~~Conformance fixtures~~ — done; see [fixtures/](fixtures/)
    (`scripts/lint_fixtures.py` checks the tree's internal consistency)
@@ -39,10 +45,13 @@ Bare_title
    [packages/selection-core/](packages/selection-core/) — isomorphic
    TypeScript: parsers, source mappers, serializers, validators; passes all
    77 conformance fixtures (`npm test`)
-3. `selection-picker` — a `<selection-picker>` web component any web tool can
-   embed to let users create Selections from manual entry, `.swiki` upload,
-   PetScan, SPARQL, or Quarry
-4. Integration into [WP1](https://github.com/openzim/wp1)
+3. ~~`selection-picker`~~ — done; see
+   [packages/selection-picker/](packages/selection-picker/) — a
+   `<selection-picker>` web component any web tool can embed to let users
+   create Selections from manual entry, `.swiki` upload, PetScan, SPARQL, or
+   Quarry
+4. Packaging and npm/CDN distribution
+5. Integration into [WP1](https://github.com/openzim/wp1)
 
 ## Related
 

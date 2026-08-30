@@ -35,6 +35,7 @@ import {
 
 const sm = Sitematrix.fromJson(sitematrixJson); // Result<Sitematrix>
 if (!sm.ok) throw new Error(sm.error.message);
+sm.value.sites(); // → [{ dbname, domain }, ...] sorted by domain (project pickers)
 
 // .swiki/TSV upload (SPEC §5.1, §7.2) - dbname from sidecar, else filename
 parseTsv(bytes, { filename: "list.enwiki.tsv", sitematrix: sm.value });

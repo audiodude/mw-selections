@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>selection-picker — plain HTML</title>
+  </head>
+  <body>
+    <h1>selection-picker</h1>
+    <button id="pick">Create a selection</button>
+    <pre id="out">(nothing yet)</pre>
+
+    <selection-picker id="picker" dbname="enwiki,dewiki" max-bytes="26214400"></selection-picker>
+
+    <script type="module">
+      import "../dist/selection-picker.min.js";
+
+      const picker = document.getElementById("picker");
+      const out = document.getElementById("out");
+
+      picker.addEventListener("selection", (event) => {
+        console.log("selection event", event.detail);
+      });
+
+      document.getElementById("pick").addEventListener("click", async () => {
+        try {
+          out.textContent = JSON.stringify(await picker.open(), null, 2);
+        } catch (error) {
+          out.textContent = error.name === "AbortError" ? "(cancelled)" : String(error);
+        }
+      });
+    </script>
+  </body>
+</html>

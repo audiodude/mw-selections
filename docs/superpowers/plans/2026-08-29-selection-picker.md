@@ -2,6 +2,17 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Amended 2026-08-29** after the adversarial review
+> (`2026-08-29-selection-picker-review.md`): the sitematrix is never proxied
+> (B1); `seedState` omits ns ≠ 0 pages instead of re-homing them into
+> mainspace (H1); `open()` re-entrancy throws, seedless `open()` starts
+> blank, and malformed cap attributes throw (H2/L3/L4); the browser smoke
+> test waits on Load-button readiness, not a clock (H3); PetScan/Quarry URLs
+> get a picker-level `URL_INVALID` pre-check (M1); the toolchain pin covers
+> `close`-event dispatch and file-upload plumbing (M2/L5); the define guard
+> is exported and called twice (M3); §8/#12 citations corrected; the §5.1
+> sidecar and `userMessage` default-branch scope decisions documented (L1/L2).
+
 **Goal:** `packages/selection-picker` — an embeddable `<selection-picker>` custom element that lets a user of any web tool build a Selection from pasted titles, a `.swiki` upload, a PetScan URL, a SPARQL query, or a Quarry URL, and hands the host canonical Selection JSON via a promise and a `selection` event.
 
 **Architecture:** Three layers, tested separately. (1) A **policy/ingest layer** of pure and async functions over `selection-core` — mode input → `PickerResult<{selection, report}>` with dbname-allowlist enforcement, byte/item caps, and a final structural gate; no DOM. (2) A **presentation layer** of pure Lit template functions (one per input mode) with no state and no fetching. (3) One **Lit element** that owns dialog lifecycle, mode state, and the promise/event contract. Domain errors are values everywhere; the only rejection is user cancellation.
@@ -13,9 +24,9 @@
 ## Global Constraints
 
 - **Lit without decorators.** Use `static properties` + `declare` fields + constructor initialization. Verified 2026-08-29: esbuild's standard-decorator transform (what vitest and the bundle both use) breaks Lit's `@customElement`/`@query`/`@property` with `TypeError: Function expected`. Never introduce `experimentalDecorators`.
-- **Errors are values.** Every ingest/policy function returns `PickerResult<T>`; nothing throws for a domain error. The single exception: `open()`'s promise rejects with `new DOMException("selection cancelled", "AbortError")` when the user cancels, and `open()` throws a plain `Error` if called while the element is not connected (a host programming error).
+- **Errors are values.** Every ingest/policy function returns `PickerResult<T>`; nothing throws for a domain error. The exceptions: user cancellation rejects `open()`'s promise with `new DOMException("selection cancelled", "AbortError")`, and host programming errors make `open()` throw a plain `Error` synchronously — called while the element is not connected; called while the dialog is already open (a second `showModal()` would throw `InvalidStateError` inside an async method and strand the first caller's promise unsettled); or a cap attribute that is not a positive finite number (Lit's Number converter turns `max-items="abc"` into NaN, which silently disables the cap).
 - **Runtime dependencies:** `lit` and `@audiodude/selection-core` only. Dev-only additions to the repo root: `esbuild`, `happy-dom`.
-- **No proxy by default** (decision record #3). All upstream fetches go directly from the browser. The `proxy` attribute is an opt-in wrapper; nothing defaults to it.
+- **No proxy by default** (decision record #3). All upstream fetches go directly from the browser. The `proxy` attribute is an opt-in wrapper covering only the materializer services (PetScan, WDQS, Quarry); the **sitematrix is never proxied** — it always loads directly from meta (CORS-open via `origin=*`), so a host proxy that allowlists only the materializers keeps working. Nothing defaults to it.
 - **Sitematrix fetch MUST carry `origin=*`.** Verified 2026-08-29: `https://meta.wikimedia.org/w/api.php?action=sitematrix&format=json&formatversion=2` returns **no** `Access-Control-Allow-Origin` header without it, and `access-control-allow-origin: *` with it. Live payload ≈ 149 KB, 1,072 sites.
 - **`Api-User-Agent` is never set by this package.** `selection-core` already sends it to `query.wikidata.org` only.
 - **Caps reject, never truncate.** `max-bytes` measures `selectionJsonBytes(selection)` — the UTF-8 byte length of the canonical Selection JSON (decision record #9). `max-items` measures `selection.pages.length`.
@@ -210,9 +221,13 @@ Append to `packages/selection-core/test/sitematrix.test.ts` (the file already de
 test("enumerates every site, sorted by domain", () => {
   const sm = load();
   const sites = sm.sites();
-  expect(sites.length).toBe(33); // every site in fixtures/sitematrix.json
+  expect(sites.length).toBe(33); // every site — 32 from `section.site` arrays plus the bare-array `specials` section
   expect(sites[0]).toEqual({ dbname: "dewikibooks", domain: "de.wikibooks.org" });
-  expect(sites.map((s) => s.domain)).toEqual([...sites.map((s) => s.domain)].sort());
+  // Pin the implementation's localeCompare order, not the code-unit sort it
+  // happens to coincide with for these 33 domains (hyphenated domains diverge).
+  expect(sites.map((s) => s.domain)).toEqual(
+    [...sites.map((s) => s.domain)].sort((a, b) => a.localeCompare(b)),
+  );
   expect(sites.find((s) => s.dbname === "metawiki")?.domain).toBe("meta.wikimedia.org");
 });
 ```
@@ -264,7 +279,7 @@ import type { ErrorCode } from "@audiodude/selection-core";
 
 /**
  * Core's codes (which include the 16 fixture-registry codes and four
- * fetch-layer codes) plus the three policy codes only this package can
+ * fetch-layer codes) plus the four policy codes only this package can
  * produce. Because this is a superset, every core `Result` is assignable to
  * `PickerResult` without conversion.
  */
@@ -272,7 +287,8 @@ export type PickerErrorCode =
   | ErrorCode
   | "DBNAME_NOT_ALLOWED"
   | "MAX_BYTES_EXCEEDED"
-  | "MAX_ITEMS_EXCEEDED";
+  | "MAX_ITEMS_EXCEEDED"
+  | "URL_INVALID";
 
 export interface PickerError {
   code: PickerErrorCode;
@@ -296,7 +312,7 @@ export function pickerErr(
 
 - [ ] **Step 10: Write the toolchain-pin test**
 
-`packages/selection-picker/test/toolchain.test.ts` — this test exists to fail loudly if the decorator-free Lit + happy-dom decisions are ever broken:
+`packages/selection-picker/test/toolchain.test.ts` — this test exists to fail loudly if the decorator-free Lit + happy-dom decisions are ever broken. It pins every happy-dom capability the rest of the suite rests on: constructable stylesheets, `showModal`/`close`, the `close` **event** (the whole cancel contract in Task 6 hangs on the event, not the `open` property), and the `DataTransfer`/`input.files`/`File.arrayBuffer()` upload plumbing:
 
 ```ts
 import { LitElement, css, html } from "lit";
@@ -325,22 +341,50 @@ if (!customElements.get("toolchain-probe")) {
   customElements.define("toolchain-probe", ToolchainProbe);
 }
 
-test("decorator-free Lit renders into shadow DOM with constructable styles", async () => {
-  document.body.innerHTML = `<toolchain-probe label="ok"></toolchain-probe>`;
+/** Each test mounts its own probe: no test depends on another's DOM. */
+async function mountProbe(label = ""): Promise<ToolchainProbe> {
+  document.body.innerHTML = `<toolchain-probe label="${label}"></toolchain-probe>`;
   const el = document.querySelector("toolchain-probe") as ToolchainProbe;
   await el.updateComplete;
+  return el;
+}
+
+test("decorator-free Lit renders into shadow DOM with constructable styles", async () => {
+  const el = await mountProbe("ok");
   expect(el.renderRoot.querySelector("p")!.textContent).toBe("ok");
   // CSP: constructable stylesheets, not injected <style> tags.
   expect((el.shadowRoot as ShadowRoot).adoptedStyleSheets.length).toBe(1);
   expect(el.shadowRoot!.querySelectorAll("style").length).toBe(0);
 });
 
-test("native dialog showModal/close is available in the test environment", () => {
-  const el = document.querySelector("toolchain-probe") as ToolchainProbe;
+test("native dialog showModal/close is available in the test environment", async () => {
+  const el = await mountProbe();
   el.dialogEl.showModal();
   expect(el.dialogEl.open).toBe(true);
   el.dialogEl.close();
   expect(el.dialogEl.open).toBe(false);
+});
+
+test("dialog.close() dispatches the close event the cancel contract rests on", async () => {
+  const el = await mountProbe();
+  let closes = 0;
+  el.dialogEl.addEventListener("close", () => {
+    closes += 1;
+  });
+  el.dialogEl.showModal();
+  el.dialogEl.close();
+  expect(closes).toBe(1);
+});
+
+test("file upload plumbing exists: DataTransfer, input.files, File.arrayBuffer", async () => {
+  const transfer = new DataTransfer();
+  transfer.items.add(new File([new TextEncoder().encode("Paris\t1\n")], "list.tsv"));
+  document.body.innerHTML = `<input type="file" />`;
+  const input = document.querySelector("input") as HTMLInputElement;
+  input.files = transfer.files;
+  expect(input.files!.length).toBe(1);
+  const bytes = new Uint8Array(await input.files![0]!.arrayBuffer());
+  expect(new TextDecoder().decode(bytes)).toBe("Paris\t1\n");
 });
 
 test("core is importable by package name and results widen to PickerResult", () => {
@@ -353,7 +397,7 @@ test("core is importable by package name and results widen to PickerResult", () 
 - [ ] **Step 11: Run the picker tests and typecheck**
 
 Run: `npm run test -w @audiodude/selection-picker && npm run typecheck -w @audiodude/selection-picker`
-Expected: PASS, 3 tests. Lit prints a dev-mode warning to stderr in every picker test run; that is expected and never a failure.
+Expected: PASS, 5 tests. Lit prints a dev-mode warning to stderr in every picker test run; that is expected and never a failure.
 
 - [ ] **Step 12: Commit**
 
@@ -559,6 +603,9 @@ test("userMessage turns core diagnostics into actionable English", () => {
   expect(userMessage({ code: "QUARRY_NO_TITLE_COLUMN", message: "alias one: AS page_title" })).toBe(
     "alias one: AS page_title",
   );
+  expect(
+    userMessage({ code: "URL_INVALID", message: "That doesn't look like a Quarry query URL (https://quarry.wmcloud.org/query/<id>)." }),
+  ).toBe("That doesn't look like a Quarry query URL (https://quarry.wmcloud.org/query/<id>).");
   expect(userMessage({ code: "JSON_SHAPE", message: "no pages list" })).toBe(
     "Could not load that selection (JSON_SHAPE).",
   );
@@ -619,6 +666,14 @@ export const STRINGS = {
     `This selection has ${num.format(actual)} items; this page accepts at most ${num.format(max)}.`,
   sitematrixUnavailable:
     "Could not load the list of Wikimedia projects. Check your connection and reopen this dialog.",
+  petscanUrlInvalid:
+    "That doesn't look like a PetScan query URL. Paste the URL of a PetScan query page.",
+  quarryUrlInvalid:
+    "That doesn't look like a Quarry query URL (https://quarry.wmcloud.org/query/<id>).",
+  seedOmitted: (omitted: number) =>
+    omitted === 1
+      ? "1 page outside the main namespace was omitted; title lines can only express main-namespace pages."
+      : `${num.format(omitted)} pages outside the main namespace were omitted; title lines can only express main-namespace pages.`,
 } as const;
 
 /**
@@ -635,6 +690,7 @@ export function userMessage(error: PickerError): string {
     case "DBNAME_MISSING":
     case "DBNAME_INVALID":
     case "QUARRY_NO_TITLE_COLUMN":
+    case "URL_INVALID":
       return error.message;
     case "ENCODING_INVALID":
       return "That file is not valid UTF-8 text.";
@@ -660,6 +716,11 @@ export function userMessage(error: PickerError): string {
     case "QUARRY_RUN_NOT_READY":
       return "That Quarry query has no completed run yet.";
     default:
+      // DUPLICATE_ITEM, JSON_MALFORMED, and ITEM_SHAPE land here. They are
+      // unreachable from widget input today — every core producer dedupes,
+      // and the widget serializes its own JSON before validating — so they
+      // keep the generic copy. If a future source stops deduping, give
+      // DUPLICATE_ITEM real copy.
       return `Could not load that selection (${error.code}).`;
   }
 }
@@ -743,7 +804,10 @@ export interface Caps {
   maxItems?: number;
 }
 
-/** Host policy (SPEC §8): caps reject; they never truncate a Selection. */
+/**
+ * Host policy: caps reject; they never truncate a Selection. Authority is
+ * decision record #9 and task 03 — SPEC §8 itself sets no size limits.
+ */
 export function checkCaps(selection: Selection, caps: Caps): PickerResult<void> {
   if (caps.maxItems !== undefined && selection.pages.length > caps.maxItems) {
     return pickerErr(
@@ -1228,6 +1292,24 @@ test("upstream failures surface their core code", async () => {
   expect(result.ok).toBe(false);
   if (!result.ok) expect(result.error.code).toBe("HTTP_ERROR");
 });
+
+test("an empty or malformed URL is rejected before any fetch, with input-blaming copy", async () => {
+  const fetch = fakeFetch([]);
+  const petscan = await ingest({ mode: "petscan", url: "" }, deps({ fetch }));
+  expect(petscan.ok).toBe(false);
+  if (!petscan.ok) expect(petscan.error.code).toBe("URL_INVALID");
+
+  const quarry = await ingest(
+    { mode: "quarry", url: "https://quarry.wmcloud.org/run/7" },
+    deps({ fetch }),
+  );
+  expect(quarry.ok).toBe(false);
+  if (!quarry.ok) {
+    expect(quarry.error.code).toBe("URL_INVALID");
+    expect(quarry.error.message).toMatch(/Quarry query URL/);
+  }
+  expect(fetch.calls).toEqual([]); // no service was contacted
+});
 ```
 
 - [ ] **Step 3: Run both to verify they fail**
@@ -1311,6 +1393,21 @@ export async function ingest(
   return pickerOk({ selection, report });
 }
 
+/**
+ * Picker-level URL validation. Core reports a malformed URL as
+ * UPSTREAM_SHAPE, whose user copy blames the service ("answered in an
+ * unexpected format") — but no service was contacted. Catch the obvious
+ * cases before any fetch, with copy that blames the input.
+ */
+function isHttpUrl(url: string): boolean {
+  try {
+    const { protocol } = new URL(url);
+    return protocol === "https:" || protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 async function produce(
   input: IngestInput,
   deps: IngestDeps,
@@ -1349,6 +1446,9 @@ async function produce(
       });
     }
     case "petscan": {
+      if (!isHttpUrl(input.url)) {
+        return pickerErr("URL_INVALID", STRINGS.petscanUrlInvalid);
+      }
       const fetched = await fetchPetscanSelection(input.url, {
         sitematrix: deps.sitematrix,
         fetch: deps.fetch,
@@ -1372,6 +1472,9 @@ async function produce(
       return pickerOk(fetched.value);
     }
     case "quarry": {
+      if (!isHttpUrl(input.url) || !/\/query\/\d+/.test(input.url)) {
+        return pickerErr("URL_INVALID", STRINGS.quarryUrlInvalid);
+      }
       const fetched = await fetchQuarrySelection(input.url, { fetch: deps.fetch });
       if (!fetched.ok) return fetched;
       return pickerOk({
@@ -1386,7 +1489,7 @@ async function produce(
 - [ ] **Step 5: Run the tests**
 
 Run: `npm run test -w @audiodude/selection-picker -- ingest`
-Expected: PASS, 11 tests. The `dynamic: true` flags on petscan/sparql/quarry sources come from core and are asserted implicitly by the fixture equality.
+Expected: PASS, 12 tests. The `dynamic: true` flags on petscan/sparql/quarry sources come from core and are asserted implicitly by the fixture equality.
 
 - [ ] **Step 6: Typecheck and commit**
 
@@ -1416,7 +1519,7 @@ EOF
 - Produces:
   - `styles.ts`: `pickerStyles: CSSResult`.
   - `forms.ts`: `interface FormState { dbname: string; manualText: string; filename: string; petscanUrl: string; sparqlEndpoint: string; sparqlQuery: string; quarryUrl: string }`, `interface FormCallbacks { update(patch: Partial<FormState>): void; selectFile(file: File | null): void }`, `renderProjectPicker(value: string, domains: string[], cb: FormCallbacks): TemplateResult`, `renderForm(mode: Mode, state: FormState, showProject: boolean, domains: string[], cb: FormCallbacks): TemplateResult`.
-  - `seed.ts`: `interface SeedState { mode: Mode; state: Partial<FormState> }`, `seedState(seed: Selection): SeedState`.
+  - `seed.ts`: `interface SeedState { mode: Mode; state: Partial<FormState>; omitted: number }`, `seedState(seed: Selection): SeedState`.
 
 Everything in this task is pure: no state, no fetching, no `document`. The element (Task 6) owns all of that.
 
@@ -1554,6 +1657,7 @@ test("a petscan seed reopens the query URL, not the materialized list", () => {
   expect(seedState(seed)).toEqual({
     mode: "petscan",
     state: { dbname: "enwiki", petscanUrl: "https://petscan.wmcloud.org/?psid=99" },
+    omitted: 0,
   });
 });
 
@@ -1566,6 +1670,7 @@ test("a quarry seed reopens the query URL", () => {
   expect(seedState(seed)).toEqual({
     mode: "quarry",
     state: { dbname: "enwiki", quarryUrl: "https://quarry.wmcloud.org/query/1" },
+    omitted: 0,
   });
 });
 
@@ -1587,12 +1692,20 @@ test("a sparql seed reopens endpoint, query, and project", () => {
       sparqlEndpoint: "https://query.wikidata.org/sparql",
       sparqlQuery: "SELECT ?url {}",
     },
+    omitted: 0,
   });
 });
 
 test("simple, swiki, unknown, and absent sources rehydrate as editable title lines", () => {
   const pages: Selection["pages"] = ["Paris", ["Statue_of_Liberty", 28617], ["Talk_x", null, 1]];
-  const expected = { dbname: "enwiki", manualText: "Paris\nStatue_of_Liberty\nTalk_x" };
+  // The id is dropped (lossy but identity-preserving: the title still names
+  // the same page); the ns-1 page cannot be expressed as a title line at all
+  // and is counted as omitted — never silently re-homed into mainspace.
+  const expected = {
+    mode: "manual",
+    state: { dbname: "enwiki", manualText: "Paris\nStatue_of_Liberty" },
+    omitted: 1,
+  };
 
   for (const source of [
     { type: "simple" },
@@ -1602,7 +1715,7 @@ test("simple, swiki, unknown, and absent sources rehydrate as editable title lin
   ]) {
     const seed: Selection =
       source === undefined ? { dbname: "enwiki", pages } : { dbname: "enwiki", pages, source };
-    expect(seedState(seed)).toEqual({ mode: "manual", state: expected });
+    expect(seedState(seed)).toEqual(expected);
   }
 });
 ```
@@ -1867,15 +1980,24 @@ import type { Mode } from "./ingest.js";
 export interface SeedState {
   mode: Mode;
   state: Partial<FormState>;
+  /** Pages a static seed could not express as title lines (ns ≠ 0). */
+  omitted: number;
 }
 
 /**
  * open(seed) prefill. A dynamic source rehydrates its query, never its
- * materialized list (decision record #12) — reloading re-materializes it. A
- * swiki seed cannot rehydrate a File, so its titles become editable manual
- * text; unrecognized types are static (SPEC §6.1) and do the same. The
- * emitted source then honestly becomes `simple`: the user is editing a title
- * list, not re-uploading a file.
+ * materialized list — the only honest reading of `open(seed)` under the
+ * create-only contract (decision record #1; task 03). A swiki seed cannot
+ * rehydrate a File, so its titles become editable manual text; unrecognized
+ * types are static (SPEC §6.1) and do the same. The emitted source then
+ * honestly becomes `simple`: the user is editing a title list, not
+ * re-uploading a file.
+ *
+ * Manual text can only express main-namespace titles (core's
+ * normalizeManualText hardcodes ns 0), so ns ≠ 0 pages are **omitted** and
+ * counted for the element to surface — mapping `["Talk_x", null, 1]` to the
+ * bare line `Talk_x` would silently re-home it into mainspace, a different
+ * page. Page ids are dropped; that is lossy but identity-preserving.
  *
  * `state.dbname` may be a dbname here: resolveDbname falls back to treating
  * an unrecognized project field as one.
@@ -1884,9 +2006,17 @@ export function seedState(seed: Selection): SeedState {
   const source = seed.source;
   switch (source?.type) {
     case "petscan":
-      return { mode: "petscan", state: { dbname: seed.dbname, petscanUrl: source.url ?? "" } };
+      return {
+        mode: "petscan",
+        state: { dbname: seed.dbname, petscanUrl: source.url ?? "" },
+        omitted: 0,
+      };
     case "quarry":
-      return { mode: "quarry", state: { dbname: seed.dbname, quarryUrl: source.url ?? "" } };
+      return {
+        mode: "quarry",
+        state: { dbname: seed.dbname, quarryUrl: source.url ?? "" },
+        omitted: 0,
+      };
     case "sparql":
       // An absent endpoint stays empty rather than falling back to WDQS: the
       // endpoint is part of the source's identity, not a picker default.
@@ -1897,17 +2027,22 @@ export function seedState(seed: Selection): SeedState {
           sparqlEndpoint: source.endpoint ?? "",
           sparqlQuery: source.query ?? "",
         },
+        omitted: 0,
       };
-    default:
+    default: {
+      const titles: string[] = [];
+      let omitted = 0;
+      for (const page of seed.pages) {
+        if (typeof page === "string") titles.push(page);
+        else if ((page[2] ?? 0) === 0) titles.push(page[0]);
+        else omitted += 1;
+      }
       return {
         mode: "manual",
-        state: {
-          dbname: seed.dbname,
-          manualText: seed.pages
-            .map((page) => (typeof page === "string" ? page : page[0]))
-            .join("\n"),
-        },
+        state: { dbname: seed.dbname, manualText: titles.join("\n") },
+        omitted,
       };
+    }
   }
 }
 ```
@@ -1943,7 +2078,7 @@ EOF
 - Consumes: everything from Tasks 1–5, plus core's `defaultFetch`, `Selection`, `Sitematrix`, `FetchLike`.
 - Produces:
   - `class SelectionPicker extends LitElement` — attributes `dbname`, `max-bytes`, `max-items`, `proxy`; property `fetchImpl?: FetchLike`; method `open(seed?: Selection): Promise<Selection>`; event `selection` (`CustomEvent<Selection>`, `bubbles: true`, `composed: true`).
-  - `index.ts`: guarded `customElements.define("selection-picker", SelectionPicker)` plus re-exports (`SelectionPicker`, `SITEMATRIX_URL`, and the `Mode` / `IngestOutcome` / `IngestReport` / `PickerError` / `PickerErrorCode` / `PickerResult` types).
+  - `index.ts`: exported `defineSelectionPicker()` — the guarded `customElements.define("selection-picker", SelectionPicker)`, run once at module top level and callable again by tests (a bare re-import is an ESM cache hit and re-runs nothing) — plus re-exports (`SelectionPicker`, `SITEMATRIX_URL`, and the `Mode` / `IngestOutcome` / `IngestReport` / `PickerError` / `PickerErrorCode` / `PickerResult` types).
 
 Timing note for the tests below: `open()` starts an async sitematrix load, and
 `#load()` is fired from a click handler, so a single `await el.updateComplete`
@@ -2192,10 +2327,10 @@ test("editing a field after a successful load clears the stale result", async ()
   expect(shadow<HTMLButtonElement>(el, "button[part=confirm]").disabled).toBe(true);
 });
 
-test("the proxy attribute routes upstream requests through the host proxy", async () => {
+test("the proxy attribute routes materializer requests — never the sitematrix — through the host proxy", async () => {
   const meta = readFixtureJson("petscan", "manual-list", "meta.json");
   const fetch = fakeFetch([
-    { match: "action=sitematrix", json: sitematrixRoute.json },
+    sitematrixRoute, // reached directly: the sitematrix is never proxied
     { match: "url=https%3A%2F%2Fpetscan", json: readFixtureJson("petscan", "manual-list", "input.json") },
   ]);
   document.body.innerHTML = `<selection-picker dbname="enwiki" proxy="https://host.example/p"></selection-picker>`;
@@ -2209,12 +2344,50 @@ test("the proxy attribute routes upstream requests through the host proxy", asyn
   await click(el, "button[part=load]");
 
   expect(el.renderRoot.querySelector("p[part=error]")).toBeNull();
-  expect(fetch.calls.every((url) => url.startsWith("https://host.example/p?url="))).toBe(true);
+  // Not vacuous: both requests must really have happened.
+  expect(fetch.calls.length).toBe(2);
+  expect(fetch.calls[0]).toContain("action=sitematrix");
+  expect(fetch.calls[0]!.startsWith("https://host.example/p?url=")).toBe(false);
+  expect(fetch.calls[1]!.startsWith("https://host.example/p?url=https%3A%2F%2Fpetscan")).toBe(true);
 });
 
 test("defining the element twice does not throw (double-loaded CDN tags)", async () => {
-  await import("../src/index.js");
+  // A bare re-import is an ESM cache hit and re-runs nothing; call the
+  // exported guard directly so the test actually exercises it.
+  const { defineSelectionPicker } = await import("../src/index.js");
+  defineSelectionPicker(); // second definition: the file-top import already ran it
   expect(customElements.get("selection-picker")).toBeDefined();
+});
+
+test("open() while already open is a host error: it throws and the first session survives", async () => {
+  const el = mount(`dbname="enwiki"`);
+  const pending = el.open();
+  await settle(el);
+  expect(() => el.open()).toThrow(/already open/);
+
+  setValue(shadow<HTMLTextAreaElement>(el, "textarea[part=manual]"), "Paris");
+  await click(el, "button[part=load]");
+  await click(el, "button[part=confirm]");
+  await expect(pending).resolves.toMatchObject({ pages: ["Paris"] });
+});
+
+test("a seedless open() after a cancel starts blank, not with the last session's text", async () => {
+  const el = mount(`dbname="enwiki"`);
+  const first = el.open();
+  await settle(el);
+  setValue(shadow<HTMLTextAreaElement>(el, "textarea[part=manual]"), "Paris");
+  await click(el, "button[part=cancel]");
+  await expect(first).rejects.toMatchObject({ name: "AbortError" });
+
+  el.open().catch(() => undefined);
+  await settle(el);
+  expect(shadow<HTMLTextAreaElement>(el, "textarea[part=manual]").value).toBe("");
+});
+
+test("a malformed cap attribute is a loud host error, not a silently disabled cap", async () => {
+  const el = mount(`dbname="enwiki" max-items="abc"`);
+  await el.updateComplete;
+  expect(() => el.open()).toThrow(/max-items/);
 });
 ```
 
@@ -2322,6 +2495,25 @@ test("a second open() after a cancel starts from the new seed, not the old state
 
   (el.renderRoot.querySelector("button[part=cancel]") as HTMLButtonElement).click();
   await expect(second).rejects.toMatchObject({ name: "AbortError" });
+});
+
+test("a static seed's non-main-namespace pages are omitted and reported, never re-homed", async () => {
+  document.body.innerHTML = `<selection-picker dbname="enwiki"></selection-picker>`;
+  const el = document.querySelector("selection-picker") as SelectionPicker;
+  el.fetchImpl = fakeFetch([sitematrixRoute]);
+
+  el.open({
+    dbname: "enwiki",
+    pages: ["Paris", ["Talk_x", null, 1]],
+    source: { type: "swiki" },
+  }).catch(() => undefined);
+  await settle(el);
+
+  const textarea = el.renderRoot.querySelector("textarea[part=manual]") as HTMLTextAreaElement;
+  expect(textarea.value).toBe("Paris"); // Talk_x (ns 1) is not silently mainspaced
+  expect(el.renderRoot.querySelector("p[part=error]")?.textContent?.trim()).toBe(
+    "1 page outside the main namespace was omitted; title lines can only express main-namespace pages.",
+  );
 });
 ```
 
@@ -2439,20 +2631,34 @@ export class SelectionPicker extends LitElement {
   /**
    * Show the dialog and resolve with the Selection the user accepted.
    * Rejects with an AbortError DOMException if the user cancels or closes
-   * the dialog. `seed` prefills one mode (see seed.ts).
+   * the dialog. `seed` prefills one mode (see seed.ts); without one the form
+   * starts blank — every call is a fresh create session. Host programming
+   * errors throw a plain Error synchronously: element not connected, dialog
+   * already open, or a malformed cap attribute.
    */
   open(seed?: Selection): Promise<Selection> {
     if (!this.isConnected) {
       throw new Error("<selection-picker>.open() requires the element to be in the document");
     }
-    if (seed !== undefined) {
+    if (this.#reject !== undefined) {
+      // A second showModal() would throw InvalidStateError inside the
+      // void'ed #show, stranding the first caller's promise unsettled.
+      throw new Error("<selection-picker> is already open");
+    }
+    this.#checkCapAttr("max-bytes", this.maxBytes);
+    this.#checkCapAttr("max-items", this.maxItems);
+    this._error = undefined;
+    this._outcome = undefined;
+    this.#file = undefined;
+    if (seed === undefined) {
+      this._mode = "manual";
+      this._form = BLANK_STATE;
+    } else {
       const seeded = seedState(seed);
       this._mode = seeded.mode;
       this._form = { ...BLANK_STATE, ...seeded.state };
-      this.#file = undefined;
+      if (seeded.omitted > 0) this._error = STRINGS.seedOmitted(seeded.omitted);
     }
-    this._error = undefined;
-    this._outcome = undefined;
     const promise = new Promise<Selection>((resolve, reject) => {
       this.#resolve = resolve;
       this.#reject = reject;
@@ -2461,11 +2667,26 @@ export class SelectionPicker extends LitElement {
     return promise;
   }
 
+  /**
+   * Lit's Number converter turns `max-items="abc"` into NaN, and every
+   * comparison against NaN is silently false — the host would believe a cap
+   * is enforced when none is. Fail loudly instead.
+   */
+  #checkCapAttr(name: string, value: number | null): void {
+    if (value !== null && (!Number.isFinite(value) || value <= 0)) {
+      throw new Error(`<selection-picker> ${name} must be a positive number`);
+    }
+  }
+
   async #show(): Promise<void> {
     await this.updateComplete;
     this.#dialog.showModal();
     if (this.#sitematrix !== undefined) return;
-    const sitematrix = await loadSitematrix({ fetch: this.#fetch });
+    // The sitematrix always loads directly from meta (CORS-open via
+    // origin=*): the proxy is decision #3's escape hatch for the
+    // materializer services, and a host proxy that allowlists only those
+    // must not have to pass meta traffic.
+    const sitematrix = await loadSitematrix({ fetch: this.#rawFetch });
     if (!sitematrix.ok) {
       this._error = STRINGS.sitematrixUnavailable;
       return;
@@ -2480,8 +2701,14 @@ export class SelectionPicker extends LitElement {
     return dialog;
   }
 
+  /** The host-visible fetch before proxy wrapping; the sitematrix uses this. */
+  get #rawFetch(): FetchLike {
+    return this.fetchImpl ?? defaultFetch();
+  }
+
+  /** Materializer fetches: honors the `proxy` escape hatch. */
   get #fetch(): FetchLike {
-    const base = this.fetchImpl ?? defaultFetch();
+    const base = this.#rawFetch;
     return this.proxy === null || this.proxy === "" ? base : proxyFetch(this.proxy, base);
   }
 
@@ -2648,16 +2875,24 @@ export { SITEMATRIX_URL } from "./sitematrix-source.js";
 export type { IngestOutcome, IngestReport, Mode } from "./ingest.js";
 export type { PickerError, PickerErrorCode, PickerResult } from "./result.js";
 
-// Two hosts, or two CDN tags, must not throw on the second definition.
-if (customElements.get("selection-picker") === undefined) {
-  customElements.define("selection-picker", SelectionPicker);
+/**
+ * Two hosts, or two CDN tags, must not throw on the second definition.
+ * Exported so the guard is testable — a bare re-import is an ESM cache hit
+ * and would never re-run module-level code.
+ */
+export function defineSelectionPicker(): void {
+  if (customElements.get("selection-picker") === undefined) {
+    customElements.define("selection-picker", SelectionPicker);
+  }
 }
+
+defineSelectionPicker();
 ```
 
 - [ ] **Step 6: Run the component tests**
 
 Run: `npm run test -w @audiodude/selection-picker -- picker`
-Expected: PASS, 16 tests (13 in `picker.test.ts`, 3 in `picker-seed.test.ts`).
+Expected: PASS, 20 tests (16 in `picker.test.ts`, 4 in `picker-seed.test.ts`).
 
 - [ ] **Step 7: Run the whole picker suite and typecheck**
 
@@ -2764,14 +2999,20 @@ const type = async (sel, value) => {
 };
 const press = async (sel) => {
   await tab.evaluate((s) => document.getElementById("picker").renderRoot.querySelector(s).click(), sel);
-  await new Promise((r) => setTimeout(r, 500));
 };
 await type("input[part=project]", "en.wikipedia.org");
 await type("textarea[part=manual]", "Statue of Liberty\nParis\n# a comment\n");
+// The Load button stays disabled until the LIVE meta sitematrix fetch lands;
+// wait on that condition, never on a clock, or slow networks make this gate flaky.
+await wait(() => tab.evaluate(() =>
+  !document.getElementById("picker").renderRoot.querySelector("button[part=load]").disabled));
 await press("button[part=load]");
+await wait(() => tab.evaluate(() =>
+  document.getElementById("picker").renderRoot.querySelector("p[part=summary]") !== null));
 const summary = await tab.evaluate(() =>
   document.getElementById("picker").renderRoot.querySelector("p[part=summary]")?.textContent?.trim());
 await press("button[part=confirm]");
+await wait(() => tab.evaluate(() => document.getElementById("out").textContent !== "(nothing yet)"));
 const out = await tab.evaluate(() => document.getElementById("out").textContent);
 display({ summary, out });
 ```
@@ -2834,17 +3075,22 @@ serve the package directory, open `/examples/plain.html`.
 | `dbname` | Comma-separated **allowlist** of dbnames. One entry pins the project and hides the project field. Several entries restrict the project field. Absent: every Wikimedia project is offered. A source-derived dbname outside the list is a hard error, phrased as domains ("Your URL names de.wikipedia.org, but this page is only configured to accept en.wikipedia.org."). |
 | `max-bytes` | Cap on the UTF-8 byte length of the canonical Selection JSON. Exceeding it rejects; the widget never truncates. |
 | `max-items` | Cap on `pages.length`. Same semantics. |
-| `proxy` | Optional escape hatch for hosts running their own materializer. Upstream requests become `<proxy>?url=<encoded upstream URL>`; the proxy must return the upstream body unchanged. Nothing defaults to it. |
+| `proxy` | Optional escape hatch for hosts running their own materializer. Materializer requests (PetScan, WDQS, Quarry) become `<proxy>?url=<encoded upstream URL>`; the proxy must return the upstream body unchanged. The sitematrix is never proxied — it always loads directly from meta. Nothing defaults to it. |
 
 ## API
 
 - `open(seed?: Selection): Promise<Selection>` — shows the modal; resolves
   with the accepted Selection, rejects with a `DOMException` named
-  `AbortError` if the user cancels or closes the dialog. Requires the element
-  to be in the document. `seed` prefills one mode: `petscan`/`quarry`/`sparql`
+  `AbortError` if the user cancels or closes the dialog. Requires the
+  element to be in the document; calling it while the dialog is already
+  open throws. Without a seed the form starts blank — every call is a
+  fresh create session. `seed` prefills one mode: `petscan`/`quarry`/`sparql`
   seeds reopen the **query** (reloading re-materializes it); `simple`,
   `swiki`, unrecognized, and absent source types rehydrate the pages as
-  editable title lines and therefore emit `source: {type: "simple"}`.
+  editable title lines and therefore emit `source: {type: "simple"}`. Title
+  lines cannot express a namespace, so a static seed's non-main-namespace
+  pages are omitted from the prefill (the dialog reports how many); page
+  ids are dropped (the title alone identifies the page).
 - `selection` event — `CustomEvent<Selection>`, `bubbles`, `composed`,
   `detail` is the same Selection the promise resolves with.
 - `fetchImpl?: FetchLike` — property (not attribute) overriding the fetch
@@ -2861,16 +3107,20 @@ serve the package directory, open `/examples/plain.html`.
 | Quarry | `{type: "quarry", url, dynamic: true}` |
 
 Every emitted Selection passes `selection-core`'s structural gate
-(`validateSelection`, SPEC §8) before the widget hands it over, so a storing
-system's own gate cannot be the first thing to reject it.
+(`validateSelection`) before the widget hands it over. SPEC §8 assigns that
+gate to the *storing system*; the widget runs the same check first (task 03
+acceptance) so a host's own gate cannot be the first thing to reject it.
 
 ## dbname sources
 
 `dbname` is never guessed. PetScan and Quarry report it (SPEC §7.3, §7.5);
-`.swiki` carries it in the filename or sidecar (§5.1) and the widget prompts
-when it does not (§7.2); pasted titles and SPARQL take it as user input
-(§7.4). Valid dbnames come from the live meta sitematrix, fetched once per
-page with `origin=*` (required: without it the API sends no CORS header).
+`.swiki` carries it in the filename (§5.1) and the widget prompts when it
+does not (§7.2); pasted titles and SPARQL take it as user input (§7.4).
+§5.1's optional sidecar-JSON channel is not exposed in v1 — the picker has
+one file input; name the file `<anything>.<dbname>.tsv` or pick the project
+when prompted. Valid dbnames come from the live meta sitematrix, fetched
+once per page with `origin=*` (verified 2026-08-29: without it the API
+sends no CORS header; the spec's §4.2 URL omits the parameter).
 
 ## Development
 
@@ -2943,8 +3193,12 @@ Append to `docs/tasks/03-selection-picker.md`:
 Shadow DOM, native `<dialog>`, constructable stylesheets, no decorators
 (esbuild's standard-decorator transform is incompatible with Lit's).
 Attributes `dbname` (comma-separated allowlist), `max-bytes`, `max-items`,
-`proxy`; `open(seed?)` resolves with the Selection or rejects `AbortError`;
-`selection` CustomEvent is `bubbles`+`composed`.
+`proxy` (materializer fetches only; the sitematrix is never proxied);
+`open(seed?)` resolves with the Selection or rejects `AbortError`, throws on
+re-entrant calls and malformed caps, and starts blank without a seed;
+`selection` CustomEvent is `bubbles`+`composed` (the `AbortError` rejection
+and `bubbles` are this package's additions — task 03 specifies only
+`composed`).
 
 - Three layers, tested separately: a DOM-free policy/ingest layer over
   `selection-core` (`src/ingest.ts` and friends), state-free Lit template
@@ -2955,9 +3209,10 @@ Attributes `dbname` (comma-separated allowlist), `max-bytes`, `max-items`,
   `petscan/manual-list`, `sparql/dropped-rows-reported`,
   `quarry/full-columns`), so the widget's output is pinned to the same
   expectations as `selection-core`.
-- Every emitted Selection passes `validateSelection` (SPEC §8) before the
-  host receives it; caps reject and never truncate; `max-bytes` measures
-  `selectionJsonBytes`.
+- Every emitted Selection passes `validateSelection` — the structural gate
+  SPEC §8 assigns to the storing system — before the host receives it
+  (task 03 acceptance); caps reject and never truncate (decision record #9);
+  `max-bytes` measures `selectionJsonBytes`.
 - Sitematrix is fetched once per page from meta with `origin=*` — verified
   2026-08-29 that the API sends no `Access-Control-Allow-Origin` header
   without that parameter. Failures are not cached, so reopening retries.
@@ -2967,7 +3222,10 @@ Attributes `dbname` (comma-separated allowlist), `max-bytes`, `max-items`,
   their query, never the materialized list; `simple`, `swiki`, unrecognized,
   and absent source types rehydrate as editable title lines and emit
   `source: {type: "simple"}` — a `File` cannot be rehydrated, and pretending
-  otherwise would misreport provenance.
+  otherwise would misreport provenance. Non-main-namespace pages in a static
+  seed are omitted from the prefill and counted in the dialog (title lines
+  cannot express a namespace); page ids are dropped. SPEC §5.1's
+  sidecar-JSON dbname channel is out of scope for v1 (single file input).
 - Verified in a real browser via `examples/plain.html` and the built bundle:
   one `<script type="module">`, one element, no bundler, live sitematrix
   fetch, emitted Selection `{dbname: "enwiki", pages: [...],
@@ -3015,8 +3273,10 @@ gates do not cover them:**
 
 **Spec/task coverage.** Task 03's Details and Acceptance map to tasks as
 follows: Lit + Shadow DOM + native `<dialog>` + CSP-safe + `customElements.get`
-guard → Tasks 1, 5, 6 (`toolchain.test.ts` pins constructable stylesheets;
-the double-define test pins the guard); five input modes via `selection-core`
+guard → Tasks 1, 5, 6 (`toolchain.test.ts` pins constructable stylesheets,
+`close`-event dispatch, and the upload plumbing the suite rests on; the
+double-define test calls the exported `defineSelectionPicker()` twice);
+five input modes via `selection-core`
 with no proxy → Task 4; `dbname` allowlist with domain-phrased conflicts →
 Tasks 2, 4, 6; `max-bytes`/`max-items` → Tasks 2, 4, 6; `proxy` → Tasks 3, 6;
 `open(seed?)` + composed `selection` event + per-mode `source` with

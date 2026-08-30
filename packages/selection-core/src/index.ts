@@ -9,6 +9,7 @@ export type {
 } from "./types.js";
 export { err, ok } from "./types.js";
 export { Sitematrix } from "./sitematrix.js";
+export type { SiteEntry } from "./sitematrix.js";
 export { normalizeManualText } from "./simple.js";
 export { parseTsv, serializeTsv } from "./tsv.js";
 export type { ParseTsvOptions } from "./tsv.js";

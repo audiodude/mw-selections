@@ -1,0 +1,16 @@
+{
+  "name": "@audiodude/selection-picker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@audiodude/selection-core": "*",
+    "lit": "^3.3.3"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json && tsc -p test/tsconfig.json",
+    "build": "esbuild src/index.ts --bundle --format=esm --target=es2022 --minify --outfile=dist/selection-picker.min.js"
+  }
+}

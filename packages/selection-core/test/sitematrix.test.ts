@@ -35,3 +35,16 @@ test("rejects non-sitematrix input", () => {
   const result = Sitematrix.fromJson({ nope: true });
   expect(result.ok).toBe(false);
 });
+
+test("enumerates every site, sorted by domain", () => {
+  const sm = load();
+  const sites = sm.sites();
+  expect(sites.length).toBe(33); // every site — 32 from `section.site` arrays plus the bare-array `specials` section
+  expect(sites[0]).toEqual({ dbname: "dewikibooks", domain: "de.wikibooks.org" });
+  // Pin the implementation's localeCompare order, not the code-unit sort it
+  // happens to coincide with for these 33 domains (hyphenated domains diverge).
+  expect(sites.map((s) => s.domain)).toEqual(
+    [...sites.map((s) => s.domain)].sort((a, b) => a.localeCompare(b)),
+  );
+  expect(sites.find((s) => s.dbname === "metawiki")?.domain).toBe("meta.wikimedia.org");
+});

@@ -1,6 +1,6 @@
 import { err, ok, type Result } from "./types.js";
 
-interface SiteEntry {
+export interface SiteEntry {
   dbname: string;
   domain: string;
 }
@@ -51,5 +51,13 @@ export class Sitematrix {
   /** "en.wikipedia.org" → "enwiki" */
   dbnameForDomain(domain: string): string | undefined {
     return this.byDomain.get(domain)?.dbname;
+  }
+
+  /**
+   * Every site, sorted by domain. The picker's project selector needs the
+   * full list; the lookup maps alone cannot enumerate it in a stable order.
+   */
+  sites(): SiteEntry[] {
+    return [...this.byDomain.values()].sort((a, b) => a.domain.localeCompare(b.domain));
   }
 }

@@ -44,6 +44,7 @@ export const STRINGS = {
     `This selection has ${num.format(actual)} items; this page accepts at most ${num.format(max)}.`,
   sitematrixUnavailable:
     "Could not load the list of Wikimedia projects. Check your connection and reopen this dialog.",
+  loadFailed: (reason: string) => `Could not load that selection (${reason}).`,
   petscanUrlInvalid:
     "That doesn't look like a PetScan query URL. Paste the URL of a PetScan query page.",
   quarryUrlInvalid:

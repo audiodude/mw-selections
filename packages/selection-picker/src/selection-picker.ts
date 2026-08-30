@@ -68,6 +68,21 @@ export class SelectionPicker extends LitElement {
   #resolve?: (selection: Selection) => void;
   #reject?: (reason: unknown) => void;
   #file?: File;
+  /**
+   * Dialog close events still owed to sessions that were already settled
+   * programmatically (#confirm, disconnectedCallback). Real browsers
+   * deliver dialog close events as queued tasks (happy-dom fires them
+   * synchronously): by the time such an event fires, a host may have
+   * reopened — e.g. by calling open() from inside its `selection`
+   * listener — and re-armed #reject, so an unguarded #onClose would abort
+   * the new session. A session-token comparison cannot help: when the
+   * stale event fires, the new session is legitimately current, so any
+   * "closing session === current session" check passes and still aborts
+   * it. Close events fire in FIFO order, so consuming one event per
+   * settled close is exact. A `this.#dialog.open` check would instead
+   * depend on task-vs-microtask scheduling of Lit's re-render.
+   */
+  #settledCloses = 0;
 
   /**
    * Stable identity: recreating these per render would make Lit tear down and
@@ -196,26 +211,35 @@ export class SelectionPicker extends LitElement {
     this._busy = true;
     this._error = undefined;
     this._outcome = undefined;
-    const allowlist = parseAllowlist(this.dbname);
-    const input = await this.#buildInput(allowlist, sitematrix);
-    if (input === undefined) {
+    try {
+      const allowlist = parseAllowlist(this.dbname);
+      const input = await this.#buildInput(allowlist, sitematrix);
+      if (input === undefined) {
+        this._error = STRINGS.noFileChosen;
+        return;
+      }
+      const result = await ingest(input, {
+        sitematrix,
+        fetch: this.#fetch,
+        allowlist,
+        ...(this.maxBytes === null ? {} : { maxBytes: this.maxBytes }),
+        ...(this.maxItems === null ? {} : { maxItems: this.maxItems }),
+      });
+      if (!result.ok) {
+        this._error = userMessage(result.error);
+        return;
+      }
+      this._outcome = result.value;
+    } catch (thrown) {
+      // #buildInput can genuinely throw — file.arrayBuffer() rejects with
+      // NotReadableError when the chosen file changed on disk. Escaping
+      // here would surface as an unhandled rejection in the host page.
+      this._error = STRINGS.loadFailed(thrown instanceof Error ? thrown.name : String(thrown));
+    } finally {
+      // Whatever happened above, a stuck _busy would block every future
+      // load behind the re-entry guard.
       this._busy = false;
-      this._error = STRINGS.noFileChosen;
-      return;
     }
-    const result = await ingest(input, {
-      sitematrix,
-      fetch: this.#fetch,
-      allowlist,
-      ...(this.maxBytes === null ? {} : { maxBytes: this.maxBytes }),
-      ...(this.maxItems === null ? {} : { maxItems: this.maxItems }),
-    });
-    this._busy = false;
-    if (!result.ok) {
-      this._error = userMessage(result.error);
-      return;
-    }
-    this._outcome = result.value;
   }
 
   async #buildInput(
@@ -266,6 +290,7 @@ export class SelectionPicker extends LitElement {
     // Close before dispatching: a host that calls open() from its
     // `selection` listener must get a fresh session, not one immediately
     // aborted by this session's close event.
+    this.#settledCloses += 1;
     this.#dialog.close();
     this.dispatchEvent(
       new CustomEvent<Selection>("selection", {
@@ -278,6 +303,10 @@ export class SelectionPicker extends LitElement {
   }
 
   #onClose(): void {
+    if (this.#settledCloses > 0) {
+      this.#settledCloses -= 1; // stale: this session already settled
+      return;
+    }
     this.#abort();
   }
 
@@ -289,7 +318,10 @@ export class SelectionPicker extends LitElement {
   override disconnectedCallback(): void {
     super.disconnectedCallback();
     const dialog = this.renderRoot?.querySelector("dialog");
-    if (dialog?.open) dialog.close();
+    if (dialog?.open) {
+      this.#settledCloses += 1;
+      dialog.close();
+    }
     this.#abort();
   }
 

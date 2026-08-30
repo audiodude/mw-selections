@@ -372,3 +372,76 @@ test("removing the element mid-session rejects with AbortError; a reconnect can 
   shadow<HTMLDialogElement>(el, "dialog").close();
   await expect(second).rejects.toMatchObject({ name: "AbortError" });
 });
+
+test("a queued close event from a settled session cannot abort a reopened one", async () => {
+  const el = mount(`dbname="enwiki"`);
+  let second: Promise<Selection> | undefined;
+  el.addEventListener(
+    "selection",
+    () => {
+      second = el.open();
+    },
+    { once: true },
+  );
+
+  const pending = el.open();
+  await settle(el);
+  setValue(shadow<HTMLTextAreaElement>(el, "textarea[part=manual]"), "Paris");
+  await click(el, "button[part=load]");
+
+  // Emulate real-browser semantics — close() flips `open` synchronously but
+  // delivers the close event as a queued task (happy-dom fires it
+  // synchronously): defer the event past the host's reopen, then fire it late.
+  const dialog = shadow<HTMLDialogElement>(el, "dialog");
+  const realClose = dialog.close.bind(dialog);
+  dialog.close = () => {
+    dialog.removeAttribute("open");
+  };
+  await click(el, "button[part=confirm]");
+  await expect(pending).resolves.toMatchObject({ dbname: "enwiki" });
+  await settle(el);
+  expect(dialog.open).toBe(true); // the listener's open() reopened it
+
+  dialog.dispatchEvent(new Event("close")); // the stale queued event arrives
+  let aborted = false;
+  second?.catch(() => {
+    aborted = true;
+  });
+  await settle(el);
+  expect(aborted).toBe(false);
+
+  dialog.close = realClose;
+  dialog.close();
+  await expect(second).rejects.toMatchObject({ name: "AbortError" });
+});
+
+test("a file that fails to read clears busy so a later load can succeed", async () => {
+  const el = mount(`dbname="enwiki"`);
+  el.open().catch(() => undefined);
+  await settle(el);
+  await click(el, "nav button[data-mode=swiki]");
+
+  const bytes = new TextEncoder().encode("Paris\t54321\n");
+  const file = new File([bytes], "list.tsv");
+  file.arrayBuffer = () =>
+    Promise.reject(new DOMException("The file changed on disk", "NotReadableError"));
+  const input = shadow<HTMLInputElement>(el, "input[part=file]");
+  const transfer = new DataTransfer();
+  transfer.items.add(file);
+  input.files = transfer.files;
+  input.dispatchEvent(new Event("change"));
+  await settle(el);
+
+  await click(el, "button[part=load]");
+  expect(shadow(el, "p[part=error]").textContent?.trim()).toBe(
+    "Could not load that selection (NotReadableError).",
+  );
+  // _busy was cleared: the Load button is enabled and a retry works.
+  expect(shadow<HTMLButtonElement>(el, "button[part=load]").disabled).toBe(false);
+
+  file.arrayBuffer = () => Promise.resolve(bytes.buffer as ArrayBuffer);
+  await click(el, "button[part=load]");
+  expect(shadow(el, "p[part=summary]").textContent?.trim()).toBe(
+    "Ingested 1 item from en.wikipedia.org.",
+  );
+});

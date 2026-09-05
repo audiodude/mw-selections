@@ -48,6 +48,22 @@ beforeEach(() => {
   resetSitematrixCache();
 });
 
+test("modes: host can read the catalogue before opening; it mirrors the tab bar", async () => {
+  const el = mount(``);
+  const modes = el.modes;
+  expect(modes.map((m) => m.name)).toEqual(["manual", "swiki", "petscan", "sparql", "quarry"]);
+  for (const mode of modes) {
+    expect(mode.label.length).toBeGreaterThan(0);
+    expect(mode.description.length).toBeGreaterThan(0);
+  }
+
+  el.open().catch(() => {});
+  await settle(el);
+  const tabs = [...el.renderRoot.querySelectorAll<HTMLButtonElement>("button[part=tab]")];
+  expect(tabs.map((tab) => tab.dataset["mode"])).toEqual(modes.map((m) => m.name));
+  expect(tabs.map((tab) => tab.textContent?.trim())).toEqual(modes.map((m) => m.label));
+});
+
 test("manual mode: load, report, confirm — resolves and emits the Selection", async () => {
   const el = mount(`dbname="enwiki"`);
   const events: Selection[] = [];

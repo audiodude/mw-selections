@@ -53,6 +53,13 @@ https://selection-picker.audiodude.xyz — see *Deploying the demo* below.
   ids are dropped (the title alone identifies the page).
 - `selection` event — `CustomEvent<Selection>`, `bubbles`, `composed`,
   `detail` is the same Selection the promise resolves with.
+- `modes: readonly PickerMode[]` — the widget's input modes in tab order,
+  each `{name, label, description}` (`name` is a `Mode`:
+  `manual | swiki | petscan | sparql | quarry`). Readable before the dialog
+  has ever opened, so a host can render its own "Create from…" affordance
+  or help text. Static: the `dbname` allowlist restricts projects, not
+  modes. The same array is exported as `PICKER_MODES` for hosts rendering
+  outside the element.
 - `fetchImpl?: FetchLike` — property (not attribute) overriding the fetch
   implementation. Test seam; hosts normally leave it alone.
 

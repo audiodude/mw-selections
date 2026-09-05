@@ -12,6 +12,13 @@ export const STRINGS = {
     sparql: "SPARQL",
     quarry: "Quarry",
   },
+  modeDescriptions: {
+    manual: "Paste page titles or wiki URLs, one per line.",
+    swiki: "Upload a .swiki or TSV file exported from another tool.",
+    petscan: "Load the pages returned by a PetScan query URL.",
+    sparql: "Load the pages returned by a SPARQL query.",
+    quarry: "Load the pages returned by a Quarry query URL.",
+  },
   manualLabel: "One title or wiki URL per line. Lines beginning with # are ignored.",
   swikiLabel: "A .swiki or TSV file: item_title, optional id, optional namespace_id.",
   petscanLabel: "PetScan query URL",

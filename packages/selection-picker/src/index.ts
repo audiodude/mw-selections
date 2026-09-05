@@ -2,6 +2,7 @@ import { SelectionPicker } from "./selection-picker.js";
 
 export { SelectionPicker } from "./selection-picker.js";
 export { SITEMATRIX_URL } from "./sitematrix-source.js";
+export { PICKER_MODES, type PickerMode } from "./modes.js";
 export type { IngestOutcome, IngestReport, Mode } from "./ingest.js";
 export type { PickerError, PickerErrorCode, PickerResult } from "./result.js";
 

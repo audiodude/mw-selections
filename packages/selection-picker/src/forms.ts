@@ -62,7 +62,6 @@ export function renderForm(
           <span>${STRINGS.manualLabel}</span>
           <textarea
             part="manual"
-            rows="10"
             .value=${state.manualText}
             @input=${(e: Event) =>
               cb.update({ manualText: (e.target as HTMLTextAreaElement).value })}
@@ -110,7 +109,6 @@ export function renderForm(
           <span>${STRINGS.sparqlQueryLabel}</span>
           <textarea
             part="sparql-query"
-            rows="8"
             .value=${state.sparqlQuery}
             @input=${(e: Event) =>
               cb.update({ sparqlQuery: (e.target as HTMLTextAreaElement).value })}

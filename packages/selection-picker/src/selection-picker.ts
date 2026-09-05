@@ -365,18 +365,20 @@ export class SelectionPicker extends LitElement {
           this.#callbacks,
         )}
       </section>
-      ${this._error === undefined
-        ? nothing
-        : html`<p part="error" role="alert">${this._error}</p>`}
-      ${outcome === undefined
-        ? nothing
-        : html`<p part="summary">
-            ${STRINGS.ingestSummary(
-              outcome.report.ingested,
-              outcome.report.dropped,
-              this.#sitematrix?.domainFor(outcome.selection.dbname) ?? outcome.selection.dbname,
-            )}
-          </p>`}
+      <div part="status">
+        ${this._error === undefined
+          ? nothing
+          : html`<p part="error" role="alert">${this._error}</p>`}
+        ${outcome === undefined
+          ? nothing
+          : html`<p part="summary">
+              ${STRINGS.ingestSummary(
+                outcome.report.ingested,
+                outcome.report.dropped,
+                this.#sitematrix?.domainFor(outcome.selection.dbname) ?? outcome.selection.dbname,
+              )}
+            </p>`}
+      </div>
       <footer part="actions">
         <button part="cancel" @click=${() => this.#dialog.close()}>${STRINGS.cancel}</button>
         <button

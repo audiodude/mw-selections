@@ -8,6 +8,8 @@ import { css } from "lit";
 export const pickerStyles = css`
   :host {
     --sp-gap: 0.75rem;
+    /* Every mode's form fills this height so switching tabs never resizes the dialog. */
+    --sp-form-height: 18rem;
     font: inherit;
   }
 
@@ -45,12 +47,18 @@ export const pickerStyles = css`
     display: flex;
     flex-direction: column;
     gap: var(--sp-gap);
+    height: var(--sp-form-height);
   }
 
   label {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+  }
+
+  label:has(textarea) {
+    flex: 1;
+    min-height: 0;
   }
 
   input,
@@ -62,16 +70,24 @@ export const pickerStyles = css`
   }
 
   textarea {
-    resize: vertical;
+    flex: 1;
+    min-height: 0;
+    resize: none;
+  }
+
+  div[part="status"] {
+    /* Reserve one line so an error or summary appearing does not shift the footer. */
+    min-height: 1.5rem;
+    margin-top: var(--sp-gap);
   }
 
   p[part="error"] {
-    margin: var(--sp-gap) 0 0;
+    margin: 0;
     color: #b32424;
   }
 
   p[part="summary"] {
-    margin: var(--sp-gap) 0 0;
+    margin: 0;
     color: #14866d;
   }
 

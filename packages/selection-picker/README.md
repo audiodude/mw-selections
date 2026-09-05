@@ -25,7 +25,8 @@ directly from the browser (PetScan, WDQS, and Quarry all serve
 ```
 
 `examples/plain.html` is the runnable version: `npm run build -w @audiodude/selection-picker`,
-serve the package directory, open `/examples/plain.html`.
+serve the package directory, open `/examples/plain.html`. It is also live at
+https://selection-picker.audiodude.xyz — see *Deploying the demo* below.
 
 ## Attributes
 
@@ -96,5 +97,18 @@ output is pinned to the same expectations as `selection-core`.
 Lit is used **without decorators** (`static properties` + `declare`):
 esbuild's standard-decorator transform, which both vitest and the bundle use,
 is incompatible with Lit's decorators.
+
+### Deploying the demo
+
+```bash
+. ~/.secrets && ../../scripts/deploy-demo.sh
+```
+
+Builds the bundle, stages **only** `index.html` (from `examples/plain.html`)
+and `selection-picker.min.js` into a temp dir, and pushes it with
+`wrangler pages deploy` to the Cloudflare Pages project `selection-picker`
+(`selection-picker.pages.dev`, custom domain `selection-picker.audiodude.xyz`).
+Needs `CLOUDFLARE_API_TOKEN` or `CF_API_TOKEN` in the environment. Never
+deploy the package or repo root directly — Pages uploads every file on disk.
 
 UI strings live in `src/strings.ts`; English-only v1.

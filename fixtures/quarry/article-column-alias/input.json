@@ -1,0 +1,19 @@
+{
+  "headers": [
+    "article",
+    "page_id",
+    "score"
+  ],
+  "rows": [
+    [
+      "Statue_of_Liberty",
+      28617,
+      3
+    ],
+    [
+      "Paris",
+      22989,
+      2
+    ]
+  ]
+}

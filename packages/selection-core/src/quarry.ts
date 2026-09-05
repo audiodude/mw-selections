@@ -27,6 +27,7 @@ export function mapQuarry(response: unknown, opts: MapQuarryOptions): Result<Sel
   }
 
   let titleCol = headers.indexOf("page_title");
+  if (titleCol === -1) titleCol = headers.indexOf("article"); // WP1's SELECT ... AS article convention
   let idCol = -1;
   let nsCol = -1;
   if (titleCol !== -1) {
@@ -37,7 +38,7 @@ export function mapQuarry(response: unknown, opts: MapQuarryOptions): Result<Sel
   } else {
     return err(
       "QUARRY_NO_TITLE_COLUMN",
-      "no page_title column; alias one in your query: SELECT ... AS page_title",
+      "no page_title or article column; alias one in your query: SELECT ... AS page_title",
     );
   }
 

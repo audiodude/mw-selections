@@ -357,11 +357,13 @@ never from user input.
 1. Column recognition, using MediaWiki's own column names: a column named
    `page_title` provides `item_title`; `page_id` provides `id`;
    `page_namespace` provides `namespace_id` (with `page_title` unprefixed,
-   per MediaWiki convention).
+   per MediaWiki convention). A column named `article` is accepted as a
+   fallback for `item_title` when no `page_title` column is present (WP1's
+   established `SELECT ... AS article` convention).
 2. A result set with a single column of any name is treated as a list of
    titles.
-3. Multiple columns with no `page_title` is an error; the error MUST instruct
-   the user to alias a column (`SELECT ... AS page_title`).
+3. Multiple columns with neither `page_title` nor `article` is an error; the
+   error MUST instruct the user to alias a column (`SELECT ... AS page_title`).
 4. The `dbname` MUST come from the query run's target database as reported by
    Quarry (`enwiki_p` → `enwiki`), never from user input.
 

@@ -161,5 +161,5 @@ test("every fixture operation on disk is run by this harness", () => {
     .sort();
   const covered = [...SUPPORTED_OPS, "tsv-serialize"].sort();
   expect(covered).toEqual(ops);
-  expect(ops.flatMap((op) => casesFor(op)).length).toBe(77);
+  expect(ops.flatMap((op) => casesFor(op)).length).toBe(78);
 });

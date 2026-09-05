@@ -208,7 +208,7 @@ so outputs are byte-comparable.
 | `DBNAME_INVALID` | `dbname` not in the sitematrix | validate |
 | `SPARQL_NO_VARIABLE` | No projected variable selectable (§7.4 rule 2) | sparql |
 | `SPARQL_NO_MATCHING_ROWS` | Zero conforming rows (§7.4 rule 4) | sparql |
-| `QUARRY_NO_TITLE_COLUMN` | Multiple columns, none named `page_title` | quarry |
+| `QUARRY_NO_TITLE_COLUMN` | Multiple columns, none named `page_title` or `article` | quarry |
 
 ## Shared fixture: `sitematrix.json`
 
@@ -309,8 +309,9 @@ Every MUST/MUST NOT in SPEC §4–§7, mapped to its cases:
 | §7.4.4 zero conforming rows is an error | sparql/zero-conforming-rows |
 | §7.4.5 percent-decode, spaces → underscores, title-only | sparql/title-decoding |
 | §7.5.1 `page_title`/`page_id`/`page_namespace` convention | quarry/full-columns, quarry/page-title-extra-column |
+| §7.5.1 `article` accepted as `item_title` when `page_title` is absent | quarry/article-column-alias |
 | §7.5.2 single column of any name is titles | quarry/single-column-any-name |
-| §7.5.3 multi-column without `page_title` MUST error instructing alias | quarry/no-title-column (code only; wording untested) |
+| §7.5.3 multi-column without `page_title`/`article` MUST error instructing alias | quarry/no-title-column (code only; wording untested) |
 | §7.5.4 dbname MUST come from Quarry run metadata (`enwiki_p` → `enwiki`) | quarry/page-title-extra-column, quarry/full-columns |
 
 Not fixture-encodable (runtime/UI behavior, noted for completeness):

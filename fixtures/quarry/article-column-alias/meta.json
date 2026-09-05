@@ -1,0 +1,13 @@
+{
+  "description": "A multi-column result with no page_title but an article column: article provides item_title (WP1's SELECT ... AS article convention); page_id still provides id; other columns are ignored.",
+  "spec": [
+    "\u00a77.5"
+  ],
+  "params": {
+    "url": "https://quarry.wmcloud.org/query/90211",
+    "database": "enwiki_p"
+  },
+  "provenance": {
+    "derived": "Shape follows WP1's Quarry query convention; row values are real enwiki pages."
+  }
+}

@@ -22,7 +22,7 @@ Bare_title
 
 - [docs/SPEC.md](docs/SPEC.md) — the Selections specification, v1.0.0
   (canonical copy)
-- [fixtures/](fixtures/) — conformance fixtures: 77 language-neutral test
+- [fixtures/](fixtures/) — conformance fixtures: 78 language-neutral test
   cases covering every normative rule in SPEC §4–§7, with captured upstream
   samples ([harness contract](fixtures/README.md))
 - [packages/selection-core/](packages/selection-core/) — isomorphic
@@ -34,6 +34,9 @@ Bare_title
   the spec and the planned implementations
 - [docs/tasks/](docs/tasks/) — task breakdown for the implementation roadmap
 
+Live demo of the picker: https://selection-picker.audiodude.xyz
+(deployed with `scripts/deploy-demo.sh`)
+
 ## Status
 
 **Specification + fixtures + core library + picker widget.** Planned, in
@@ -44,7 +47,7 @@ order:
 2. ~~`selection-core`~~ — done; see
    [packages/selection-core/](packages/selection-core/) — isomorphic
    TypeScript: parsers, source mappers, serializers, validators; passes all
-   77 conformance fixtures (`npm test`)
+   78 conformance fixtures (`npm test`)
 3. ~~`selection-picker`~~ — done; see
    [packages/selection-picker/](packages/selection-picker/) — a
    `<selection-picker>` web component any web tool can embed to let users

@@ -72,6 +72,8 @@ export class SelectionPicker extends LitElement {
   #resolve?: (selection: Selection) => void;
   #reject?: (reason: unknown) => void;
   #file?: File;
+  /** The in-flight Load; aborted when the session ends so it cannot leak into the next. */
+  #loading?: AbortController;
   /**
    * Dialog close events still owed to sessions that were already settled
    * programmatically (#confirm, disconnectedCallback). Real browsers
@@ -202,47 +204,58 @@ export class SelectionPicker extends LitElement {
     return this.fetchImpl ?? defaultFetch();
   }
 
-  /** Materializer fetches: honors the `proxy` escape hatch. */
-  get #fetch(): FetchLike {
+  /** Materializer fetches: honors the `proxy` escape hatch and the load's abort signal. */
+  #fetch(signal: AbortSignal): FetchLike {
     const base = this.#rawFetch;
-    return this.proxy === null || this.proxy === "" ? base : proxyFetch(this.proxy, base);
+    const inner = this.proxy === null || this.proxy === "" ? base : proxyFetch(this.proxy, base);
+    return (url, init) => inner(url, { ...init, signal });
   }
 
   async #load(): Promise<void> {
     if (this._busy) return; // a second Load must not race the first
     const sitematrix = this.#sitematrix;
     if (sitematrix === undefined) return;
+    const loading = new AbortController();
+    this.#loading = loading;
     this._busy = true;
     this._error = undefined;
     this._outcome = undefined;
     try {
       const allowlist = parseAllowlist(this.dbname);
       const input = await this.#buildInput(allowlist, sitematrix);
+      if (loading.signal.aborted) return;
       if (input === undefined) {
         this._error = STRINGS.noFileChosen;
         return;
       }
       const result = await ingest(input, {
         sitematrix,
-        fetch: this.#fetch,
+        fetch: this.#fetch(loading.signal),
         allowlist,
         ...(this.maxBytes === null ? {} : { maxBytes: this.maxBytes }),
         ...(this.maxItems === null ? {} : { maxItems: this.maxItems }),
       });
+      // The session that started this load is gone: its result — including
+      // the AbortError the aborted fetch surfaces as — belongs to nobody.
+      if (loading.signal.aborted) return;
       if (!result.ok) {
         this._error = userMessage(result.error);
         return;
       }
       this._outcome = result.value;
     } catch (thrown) {
+      if (loading.signal.aborted) return;
       // #buildInput can genuinely throw — file.arrayBuffer() rejects with
       // NotReadableError when the chosen file changed on disk. Escaping
       // here would surface as an unhandled rejection in the host page.
       this._error = STRINGS.loadFailed(thrown instanceof Error ? thrown.name : String(thrown));
     } finally {
       // Whatever happened above, a stuck _busy would block every future
-      // load behind the re-entry guard.
-      this._busy = false;
+      // load behind the re-entry guard. An aborted load already cleared it.
+      if (this.#loading === loading) {
+        this.#loading = undefined;
+        this._busy = false;
+      }
     }
   }
 
@@ -330,6 +343,9 @@ export class SelectionPicker extends LitElement {
   }
 
   #abort(): void {
+    this.#loading?.abort();
+    this.#loading = undefined;
+    this._busy = false;
     const reject = this.#reject;
     this.#resolve = undefined;
     this.#reject = undefined;

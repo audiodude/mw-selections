@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { beforeEach, expect, test } from "vitest";
-import type { Selection } from "@audiodude/selection-core";
+import type { ResponseLike, Selection } from "@audiodude/selection-core";
 import "../src/index.js";
 import type { SelectionPicker } from "../src/selection-picker.js";
 import { resetSitematrixCache } from "../src/sitematrix-source.js";
@@ -369,6 +369,45 @@ test("two rapid Load clicks issue a single upstream fetch", async () => {
   const calls = (el.fetchImpl as RecordingFetch).calls;
   expect(calls.filter((url) => url.includes("petscan.wmcloud.org"))).toHaveLength(1);
   expect(el.renderRoot.querySelectorAll("p[part=summary]")).toHaveLength(1);
+});
+
+test("cancelling mid-load aborts the fetch and reopens with a clean, usable form", async () => {
+  const meta = readFixtureJson("petscan", "manual-list", "meta.json");
+  const el = mount(`dbname="enwiki"`);
+  // A PetScan fetch that never answers on its own; it settles only via abort.
+  let signal: AbortSignal | undefined;
+  const base = el.fetchImpl!;
+  el.fetchImpl = (url, init) => {
+    if (!url.includes("petscan.wmcloud.org")) return base(url, init);
+    signal = init?.signal;
+    // Executor form: Promise.withResolvers is absent on Node 20.
+    return new Promise<ResponseLike>((_, reject) => {
+      signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")));
+    });
+  };
+
+  const first = el.open();
+  await settle(el);
+  await click(el, "nav button[data-mode=petscan]");
+  setValue(shadow<HTMLInputElement>(el, "input[part=petscan-url]"), meta.params.url);
+  await click(el, "button[part=load]");
+  expect(shadow<HTMLButtonElement>(el, "button[part=load]").textContent?.trim()).toBe("Loading…");
+
+  await click(el, "button[part=cancel]");
+  await expect(first).rejects.toMatchObject({ name: "AbortError" });
+  expect(signal?.aborted).toBe(true);
+
+  const second = el.open();
+  await settle(el);
+  const load = shadow<HTMLButtonElement>(el, "button[part=load]");
+  expect(load.textContent?.trim()).toBe("Load");
+  expect(load.disabled).toBe(false);
+  expect(el.renderRoot.querySelector("p[part=error]")).toBeNull();
+
+  setValue(shadow<HTMLTextAreaElement>(el, "textarea[part=manual]"), "Paris");
+  await click(el, "button[part=load]");
+  await click(el, "button[part=confirm]");
+  await expect(second).resolves.toMatchObject({ pages: ["Paris"] });
 });
 
 test("removing the element mid-session rejects with AbortError; a reconnect can reopen", async () => {

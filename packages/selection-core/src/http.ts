@@ -18,7 +18,7 @@ export interface ResponseLike {
 
 export type FetchLike = (
   url: string,
-  init?: { headers?: Record<string, string> },
+  init?: { headers?: Record<string, string>; signal?: AbortSignal },
 ) => Promise<ResponseLike>;
 
 /** Every fetch adapter accepts an injectable fetch; omitted → global fetch. */

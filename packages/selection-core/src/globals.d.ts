@@ -29,3 +29,8 @@ declare class URL {
   readonly searchParams: URLSearchParams;
   toString(): string;
 }
+
+declare class AbortSignal {
+  readonly aborted: boolean;
+  addEventListener(type: "abort", listener: () => void): void;
+}

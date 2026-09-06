@@ -8,13 +8,12 @@ import { html, LitElement, nothing, type TemplateResult } from "lit";
 import { parseAllowlist, resolveDbname } from "./dbname.js";
 import { renderForm, type FormCallbacks, type FormState } from "./forms.js";
 import { ingest, type IngestInput, type IngestOutcome, type Mode } from "./ingest.js";
+import { PICKER_MODES, type PickerMode } from "./modes.js";
 import { proxyFetch } from "./proxy-fetch.js";
 import { seedState } from "./seed.js";
 import { loadSitematrix } from "./sitematrix-source.js";
 import { pickerStyles } from "./styles.js";
 import { STRINGS, userMessage } from "./strings.js";
-
-const MODES: Mode[] = ["manual", "swiki", "petscan", "sparql", "quarry"];
 
 const BLANK_STATE: FormState = {
   dbname: "",
@@ -56,6 +55,11 @@ export class SelectionPicker extends LitElement {
 
   /** Test seam and host override: any WHATWG-compatible fetch. */
   fetchImpl?: FetchLike;
+
+  /** The widget's input modes, in tab order; see modes.ts. */
+  get modes(): readonly PickerMode[] {
+    return PICKER_MODES;
+  }
 
   declare private _mode: Mode;
   declare private _form: FormState;
@@ -345,8 +349,8 @@ export class SelectionPicker extends LitElement {
     return html`<dialog part="dialog" @close=${() => this.#onClose()}>
       <h2 part="title">${STRINGS.dialogTitle}</h2>
       <nav part="tabs">
-        ${MODES.map(
-          (mode) => html`<button
+        ${PICKER_MODES.map(
+          ({ name: mode }) => html`<button
             part="tab"
             data-mode=${mode}
             aria-current=${this._mode === mode ? "true" : "false"}

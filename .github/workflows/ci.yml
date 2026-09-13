@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 24]
+    name: Node ${{ matrix.node }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run check:packages
+      # happy-dom requires Node >=20. The Node18 job still builds both packages,
+      # checks packed declarations and browser bundling, and runs the real core API.
+      - run: npm run typecheck
+        if: matrix.node == 24
+      - run: npm test
+        if: matrix.node == 24

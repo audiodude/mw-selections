@@ -42,6 +42,82 @@ must not contain `# < > [ ] { } |` or exceed 256 UTF-8 bytes (including URL
 prefixes). Invalid entries block confirmation with an explanatory message.
 This does not add a total input-size cap or a nonempty-selection requirement.
 
+## npm packages
+
+Prepared for publication; **not yet published**:
+
+- `@audiodude/selection-core` — dependency-free ESM for Node ≥18 and browsers,
+  with TypeScript declarations.
+- `@audiodude/selection-picker` — browser-only ESM and TypeScript declarations,
+  plus a self-contained `dist/selection-picker.min.js` browser module.
+
+After publication, install the picker for an embedded UI, or core for headless
+use. Import the picker in the browser entry point, not during server rendering:
+
+```sh
+npm install @audiodude/selection-picker
+```
+
+```js
+import "@audiodude/selection-picker";
+```
+
+See the [picker usage](packages/selection-picker/README.md) and
+[core API](packages/selection-core/README.md). CommonJS `require()` is not supported.
+
+### Build and validate
+
+From the repository root, using Node 24 for development:
+
+```sh
+npm ci
+npm run build
+npm run typecheck
+npm test
+npm run check:packages
+```
+
+`build` cleans and builds core before picker. Each package contains compiled ESM,
+declarations, README, and a copy of the MIT license; source and tests are excluded.
+`check:packages` rebuilds, packs, and installs both tarballs into a temporary
+consumer outside the workspace. It checks core behavior, Node/browser TypeScript
+consumers, tree-shaken picker bundling, and standalone bundle imports, then removes
+the temporary files. To retain the bundled consumer for a browser smoke check:
+
+```sh
+npm run check:packages -- --browser-output /tmp/selection-consumer.js
+```
+
+Load that file with `<script type="module">` in an HTTP-served page containing a
+`<selection-picker>` and exercise `open()`. The script checks registration; it
+does not create a UI harness. CI runs artifact checks on Node 18 and 24, and the
+full typecheck/test suite on Node 24 (happy-dom requires Node ≥20). CI does not
+publish or deploy.
+
+### Manual release
+
+Keep both package versions aligned, and update picker's compatible core
+dependency and the lockfile when advancing versions. Run the checks above first.
+From the repository root, produce the release artifacts:
+
+```sh
+npm pack --workspace=@audiodude/selection-core
+npm pack --workspace=@audiodude/selection-picker
+```
+
+The `prepack` hooks rebuild automatically; picker also builds core first.
+Inspect the resulting tarballs before publishing. When a release is explicitly
+authorized and npm authentication/scope permissions are configured, publish
+**core first**, then picker:
+
+```sh
+npm publish ./audiodude-selection-core-0.1.0.tgz --access public
+npm publish ./audiodude-selection-picker-0.1.0.tgz --access public
+```
+
+Use the new version in these filenames for subsequent releases. Publish from
+these verified tarballs, not from the private workspace root.
+
 ## Status
 
 **Specification + fixtures + core library + picker widget.** Planned, in
@@ -58,7 +134,8 @@ order:
    `<selection-picker>` web component any web tool can embed to let users
    create Selections from manual entry, `.swiki` upload, PetScan, SPARQL, or
    Quarry
-4. Packaging and npm/CDN distribution
+4. Packaging ready with npm/CDN artifacts and CI validation; initial npm
+   publication pending
 5. Integration into [WP1](https://github.com/openzim/wp1)
 
 ## Related

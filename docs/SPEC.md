@@ -307,15 +307,21 @@ Given user-entered text, one candidate item per line:
 
 1. Split on newlines; trim surrounding whitespace from each line.
 2. Drop empty lines and comment lines beginning with `#`.
-3. Strip the URL prefixes `https://<domain>/wiki/` and
+3. Percent-decode each remaining line.
+4. Reject decoded lines containing any of `# < > [ ] { } |`, or exceeding
+   256 UTF-8 bytes. Measure the entire decoded entry, including any URL
+   prefix, before stripping it (WP1 Simple title policy).
+5. Strip the URL prefixes `https://<domain>/wiki/` and
    `https://<domain>/w/index.php?title=` when present.
-4. Percent-decode.
-5. Replace spaces with underscores.
-6. Reject any resulting title containing `\t` or `\n` (report to the user).
-7. De-duplicate per §4.4.
+6. Replace spaces with underscores.
+7. Reject any resulting title containing `\t` or `\n` (report to the user).
+8. De-duplicate per §4.4.
 
 Manual items are title-only (no `id`, no `namespace_id`); namespace prefixes,
 if any, remain embedded in the title.
+
+These title checks do not impose a total input-size cap or require a nonempty
+selection. Those remain host policies, separate from structural validation.
 
 ### 7.2 `.swiki` / TSV upload (`swiki`)
 

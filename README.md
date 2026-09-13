@@ -37,6 +37,11 @@ Bare_title
 Live demo of the picker: https://selection-picker.audiodude.xyz
 (deployed with `scripts/deploy-demo.sh`)
 
+Manual entry applies WP1 Simple title checks: after percent-decoding, entries
+must not contain `# < > [ ] { } |` or exceed 256 UTF-8 bytes (including URL
+prefixes). Invalid entries block confirmation with an explanatory message.
+This does not add a total input-size cap or a nonempty-selection requirement.
+
 ## Status
 
 **Specification + fixtures + core library + picker widget.** Planned, in

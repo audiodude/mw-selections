@@ -19,7 +19,7 @@ export function percentDecodeLenient(s: string): string {
   });
 }
 
-/** db_style: spaces → underscores (SPEC §7.1 step 5, §7.4 rule 5). */
+/** db_style: spaces → underscores (SPEC §7.1 step 6, §7.4 rule 5). */
 export function dbStyle(s: string): string {
   return s.replaceAll(" ", "_");
 }

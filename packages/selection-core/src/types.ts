@@ -45,9 +45,8 @@ export interface Selection {
 }
 
 /**
- * Machine-readable error codes. The first sixteen are the conformance
- * fixtures' registry (fixtures/README.md) and are load-bearing for the
- * suite; the last four are fetch-layer codes this package adds.
+ * Machine-readable error codes: conformance fixture codes, manual-title
+ * validation codes, and fetch-layer codes.
  */
 export type ErrorCode =
   | "ENCODING_INVALID"
@@ -66,6 +65,9 @@ export type ErrorCode =
   | "SPARQL_NO_VARIABLE"
   | "SPARQL_NO_MATCHING_ROWS"
   | "QUARRY_NO_TITLE_COLUMN"
+  // Manual-title validation:
+  | "TITLE_FORBIDDEN_CHAR"
+  | "TITLE_TOO_LONG"
   // Fetch-layer codes (not part of the fixture registry):
   | "HTTP_ERROR"
   | "PAYLOAD_TOO_LARGE"

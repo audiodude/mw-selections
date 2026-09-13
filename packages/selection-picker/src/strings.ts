@@ -77,6 +77,8 @@ export function userMessage(error: PickerError): string {
     case "DBNAME_INVALID":
     case "QUARRY_NO_TITLE_COLUMN":
     case "URL_INVALID":
+    case "TITLE_FORBIDDEN_CHAR":
+    case "TITLE_TOO_LONG":
       return error.message;
     case "ENCODING_INVALID":
       return "That file is not valid UTF-8 text.";

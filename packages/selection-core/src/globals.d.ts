@@ -10,6 +10,7 @@ declare class TextDecoder {
 
 declare class TextEncoder {
   encode(input?: string): Uint8Array;
+  encodeInto(source: string, destination: Uint8Array): { read: number; written: number };
 }
 
 declare class URLSearchParams {

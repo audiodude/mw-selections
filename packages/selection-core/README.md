@@ -14,7 +14,7 @@ with stable machine-readable codes shared with the
 
 ## Installation
 
-Publication is pending. Once version 0.1.0 is published:
+Install with npm:
 
 ```sh
 npm install @audiodude/selection-core

@@ -14,7 +14,7 @@ directly from the browser (PetScan, WDQS, and Quarry all serve
 
 ## Install in an application
 
-Publication is pending. Once version 0.1.0 is published:
+Install with npm:
 
 ```sh
 npm install @audiodude/selection-picker
@@ -36,7 +36,7 @@ package client-side only in SSR applications. CommonJS `require()` is unsupporte
 
 ## Use it in a plain HTML page
 
-After npm publication, a version-pinned CDN URL can serve the standalone bundle.
+A version-pinned CDN URL serves the standalone bundle.
 It includes Lit and core and needs neither a bundler nor an import map:
 
 ```html

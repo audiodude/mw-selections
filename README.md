@@ -44,14 +44,14 @@ This does not add a total input-size cap or a nonempty-selection requirement.
 
 ## npm packages
 
-Prepared for publication; **not yet published**:
+Available on npm:
 
 - `@audiodude/selection-core` — dependency-free ESM for Node ≥18 and browsers,
   with TypeScript declarations.
 - `@audiodude/selection-picker` — browser-only ESM and TypeScript declarations,
   plus a self-contained `dist/selection-picker.min.js` browser module.
 
-After publication, install the picker for an embedded UI, or core for headless
+Install the picker for an embedded UI, or core for headless
 use. Import the picker in the browser entry point, not during server rendering:
 
 ```sh
@@ -134,8 +134,8 @@ order:
    `<selection-picker>` web component any web tool can embed to let users
    create Selections from manual entry, `.swiki` upload, PetScan, SPARQL, or
    Quarry
-4. Packaging ready with npm/CDN artifacts and CI validation; initial npm
-   publication pending
+4. ~~Packaging and npm/CDN distribution~~ — version 0.1.0 published for both
+   packages, with packed-consumer CI validation
 5. Integration into [WP1](https://github.com/openzim/wp1)
 
 ## Related

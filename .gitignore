@@ -1,3 +1,5 @@
 node_modules/
 .worktrees/
 dist/
+*.tgz
+/packages/*/LICENSE

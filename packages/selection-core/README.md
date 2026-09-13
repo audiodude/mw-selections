@@ -1,7 +1,7 @@
 # @audiodude/selection-core
 
 Isomorphic TypeScript implementation of the
-[Selections specification](../../docs/SPEC.md) (v1.0.0): parsers, source
+[Selections specification](https://github.com/audiodude/mw-selections/blob/main/docs/SPEC.md) (v1.0.0): parsers, source
 mappers, serializers, and validators for portable lists of Wikimedia pages.
 Zero runtime dependencies, zero DOM references (enforced by
 `tsconfig.json` — `lib: ["ES2022"]`, no type libraries) — runs in the
@@ -10,8 +10,27 @@ browser and in Node ≥ 18.
 Domain errors are **values, never exceptions**: every operation returns
 `Result<T> = { ok: true, value } | { ok: false, error: { code, message } }`
 with stable machine-readable codes shared with the
-[conformance fixtures](../../fixtures/README.md), which this package
-passes in full (77/77 — `npm test`).
+[conformance fixtures](https://github.com/audiodude/mw-selections/blob/main/fixtures/README.md).
+
+## Installation
+
+Publication is pending. Once version 0.1.0 is published:
+
+```sh
+npm install @audiodude/selection-core
+```
+
+```js
+import { normalizeManualText } from "@audiodude/selection-core";
+
+const result = normalizeManualText("Statue of Liberty\nParis");
+if (!result.ok) throw new Error(result.error.message);
+console.log(result.value.pages); // ["Statue_of_Liberty", "Paris"]
+```
+
+The package ships compiled ESM and TypeScript declarations; no source compilation
+is required. CommonJS `require()` is unsupported. TypeScript Node consumers should
+provide `@types/node`; browser consumers use the DOM library types.
 
 ## Types
 
@@ -85,6 +104,10 @@ await fetchQuarrySelection("https://quarry.wmcloud.org/query/104907");
 
 ## Conformance
 
-`npm test` runs the vendored fixture suite from [`fixtures/`](../../fixtures/)
+`npm test` runs the vendored fixture suite from [`fixtures/`](https://github.com/audiodude/mw-selections/tree/main/fixtures)
 (all eight operations) plus unit tests for the HTTP layer and fetch adapters.
 `npm run typecheck` proves `src/` compiles with no DOM or Node type libraries.
+
+From the repository root, `npm run build` produces `dist/index.js` and declarations.
+`npm run check:packages` verifies installed tarballs outside the workspace; see
+[build and release instructions](https://github.com/audiodude/mw-selections#build-and-validate).

@@ -1,23 +1,48 @@
 # @audiodude/selection-picker
 
 `<selection-picker>` — an embeddable custom element that lets a user of any
-web tool build a [Selection](../../docs/SPEC.md) from pasted titles, a
+web tool build a [Selection](https://github.com/audiodude/mw-selections/blob/main/docs/SPEC.md) from pasted titles, a
 `.swiki` upload, a PetScan URL, a SPARQL query, or a Quarry URL, and hands
 the host canonical Selection JSON. Create-only: editing a stored Selection is
 the host's concern.
 
 Lit 3, Shadow DOM, native `<dialog>`, constructable stylesheets, no `eval` —
 CSP-safe. All parsing, mapping, and validation come from
-[`@audiodude/selection-core`](../selection-core/); all upstream fetches go
+[`@audiodude/selection-core`](https://github.com/audiodude/mw-selections/tree/main/packages/selection-core); all upstream fetches go
 directly from the browser (PetScan, WDQS, and Quarry all serve
 `Access-Control-Allow-Origin: *`).
 
+## Install in an application
+
+Publication is pending. Once version 0.1.0 is published:
+
+```sh
+npm install @audiodude/selection-picker
+```
+
+```js
+import "@audiodude/selection-picker";
+
+const picker = document.createElement("selection-picker");
+document.body.append(picker);
+picker.dbname = "enwiki"; // Set the current project's constraint before open().
+// In your button's click handler:
+const selection = await picker.open(); // Handle AbortError on cancellation.
+```
+
+Importing registers the custom element automatically. Compiled ESM and TypeScript
+declarations are included; Lit and core are installed as dependencies. Load this
+package client-side only in SSR applications. CommonJS `require()` is unsupported.
+
 ## Use it in a plain HTML page
+
+After npm publication, a version-pinned CDN URL can serve the standalone bundle.
+It includes Lit and core and needs neither a bundler nor an import map:
 
 ```html
 <selection-picker id="picker" dbname="enwiki" max-bytes="26214400"></selection-picker>
 <script type="module">
-  import "https://cdn.example/selection-picker.min.js"; // see examples/plain.html
+  import "https://cdn.jsdelivr.net/npm/@audiodude/selection-picker@0.1.0/dist/selection-picker.min.js";
   const picker = document.getElementById("picker");
   const selection = await picker.open(); // rejects AbortError if cancelled
   console.log(selection); // { dbname, pages, source }
@@ -27,6 +52,11 @@ directly from the browser (PetScan, WDQS, and Quarry all serve
 `examples/plain.html` is the runnable version: `npm run build -w @audiodude/selection-picker`,
 serve the package directory, open `/examples/plain.html`. It is also live at
 https://selection-picker.audiodude.xyz — see *Deploying the demo* below.
+
+For self-hosting, copy `dist/selection-picker.min.js` from the installed package
+to your public assets directory and import it by URL. Its npm export is
+`@audiodude/selection-picker/selection-picker.min.js`. Use either the standalone
+bundle or the normal npm entry, not both.
 
 ## Attributes
 
@@ -94,11 +124,15 @@ sends no CORS header; the spec's §4.2 URL omits the parameter).
 ```bash
 npm run test -w @audiodude/selection-picker       # vitest + happy-dom
 npm run typecheck -w @audiodude/selection-picker
-npm run build -w @audiodude/selection-picker      # dist/selection-picker.min.js
+npm run build                                  # from repository root: core, then picker
 ```
 
+The build emits `dist/index.js`, declarations, and `dist/selection-picker.min.js`.
+For packed-consumer validation and release instructions, see the
+[repository README](https://github.com/audiodude/mw-selections#build-and-validate).
+
 Per-mode tests replay the repository's [conformance
-fixtures](../../fixtures/) through the ingest pipeline, so the widget's
+fixtures](https://github.com/audiodude/mw-selections/tree/main/fixtures) through the ingest pipeline, so the widget's
 output is pinned to the same expectations as `selection-core`.
 
 Lit is used **without decorators** (`static properties` + `declare`):

@@ -4,6 +4,8 @@
   "type": "module",
   "workspaces": ["packages/*"],
   "scripts": {
+    "build": "npm run build --workspace=@audiodude/selection-picker",
+    "check:packages": "npm run build && node scripts/check-packages.mjs",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },

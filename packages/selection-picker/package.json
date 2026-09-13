@@ -1,16 +1,40 @@
 {
   "name": "@audiodude/selection-picker",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
+  "description": "A Lit web component for choosing MediaWiki page selections.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/audiodude/mw-selections.git",
+    "directory": "packages/selection-picker"
+  },
+  "publishConfig": { "access": "public" },
+  "files": ["dist", "README.md", "LICENSE"],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./selection-picker.min.js": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/selection-picker.min.js"
+    }
+  },
+  "sideEffects": ["./dist/index.js", "./dist/selection-picker.min.js"],
   "dependencies": {
-    "@audiodude/selection-core": "*",
+    "@audiodude/selection-core": "^0.1.0",
     "lit": "^3.3.3"
   },
   "scripts": {
+    "prebuild": "npm run build --workspace=@audiodude/selection-core",
+    "prepack": "npm run build",
+    "pretest": "npm run build --workspace=@audiodude/selection-core",
+    "pretypecheck": "npm run build --workspace=@audiodude/selection-core",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json && tsc -p test/tsconfig.json",
-    "build": "esbuild src/index.ts --bundle --format=esm --target=es2022 --minify --outfile=dist/selection-picker.min.js"
+    "build": "node ../../scripts/prepare-package.mjs && tsc -p tsconfig.build.json && esbuild src/index.ts --bundle --format=esm --platform=browser --target=es2022 --minify --outfile=dist/selection-picker.min.js"
   }
 }

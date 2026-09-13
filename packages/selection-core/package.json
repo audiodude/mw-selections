@@ -1,10 +1,29 @@
 {
   "name": "@audiodude/selection-core",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
+  "description": "Parse, validate, serialize, and fetch MediaWiki page selections.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/audiodude/mw-selections.git",
+    "directory": "packages/selection-core"
+  },
+  "publishConfig": { "access": "public" },
+  "engines": { "node": ">=18" },
+  "files": ["dist", "README.md", "LICENSE"],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
   "scripts": {
+    "build": "node ../../scripts/prepare-package.mjs && tsc -p tsconfig.build.json",
+    "prepack": "npm run build",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json && tsc -p test/tsconfig.json"
   }

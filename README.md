@@ -42,6 +42,11 @@ must not contain `# < > [ ] { } |` or exceed 256 UTF-8 bytes (including URL
 prefixes). Invalid entries block confirmation with an explanatory message.
 This does not add a total input-size cap or a nonempty-selection requirement.
 
+The **WikiProject** tab lists projects tracked by WP1 and loads their complete
+article lists into `enwiki` selections. WP1 restricts browser origins; embedding
+sites outside its CORS allowlist need the picker's existing `proxy` setting.
+See [WikiProject usage](packages/selection-picker/README.md#wikiproject).
+
 ## npm packages
 
 Available on npm:
@@ -132,8 +137,8 @@ order:
 3. ~~`selection-picker`~~ — done; see
    [packages/selection-picker/](packages/selection-picker/) — a
    `<selection-picker>` web component any web tool can embed to let users
-   create Selections from manual entry, `.swiki` upload, PetScan, SPARQL, or
-   Quarry
+   create Selections from manual entry, `.swiki` upload, PetScan, SPARQL,
+   Quarry, or WikiProject
 4. ~~Packaging and npm/CDN distribution~~ — version 0.1.0 published for both
    packages, with packed-consumer CI validation
 5. Integration into [WP1](https://github.com/openzim/wp1)

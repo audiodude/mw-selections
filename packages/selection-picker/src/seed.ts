@@ -30,6 +30,12 @@ export interface SeedState {
 export function seedState(seed: Selection): SeedState {
   const source = seed.source;
   switch (source?.type) {
+    case "wikiproject":
+      return {
+        mode: "wikiproject",
+        state: { wikiproject: typeof source.project === "string" ? source.project : "" },
+        omitted: 0,
+      };
     case "petscan":
       return {
         mode: "petscan",

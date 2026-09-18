@@ -14,8 +14,9 @@ import { checkCaps, type Caps } from "./caps.js";
 import { checkDbname } from "./dbname.js";
 import { pickerErr, pickerOk, type PickerResult } from "./result.js";
 import { STRINGS } from "./strings.js";
+import { fetchWikiProjectSelection } from "./wikiproject.js";
 
-export type Mode = "manual" | "swiki" | "petscan" | "sparql" | "quarry";
+export type Mode = "manual" | "swiki" | "petscan" | "sparql" | "quarry" | "wikiproject";
 
 /** What the widget knows after the user filled in one mode's form. */
 export type IngestInput =
@@ -23,7 +24,8 @@ export type IngestInput =
   | { mode: "swiki"; bytes: Uint8Array; filename: string; dbname?: string }
   | { mode: "petscan"; url: string }
   | { mode: "sparql"; dbname: string; endpoint: string; query: string }
-  | { mode: "quarry"; url: string };
+  | { mode: "quarry"; url: string }
+  | { mode: "wikiproject"; project: string };
 
 export interface IngestDeps extends Caps {
   sitematrix: Sitematrix;
@@ -91,6 +93,19 @@ async function produce(
   deps: IngestDeps,
 ): Promise<PickerResult<IngestOutcome>> {
   switch (input.mode) {
+    case "wikiproject": {
+      if (input.project.trim() === "") {
+        return pickerErr("WIKIPROJECT_REQUIRED", STRINGS.wikiprojectRequired);
+      }
+      const dbname = checkDbname("enwiki", deps.allowlist, deps.sitematrix);
+      if (!dbname.ok) return dbname;
+      const fetched = await fetchWikiProjectSelection(input.project, deps.fetch);
+      if (!fetched.ok) return fetched;
+      return pickerOk({
+        selection: fetched.value,
+        report: { ingested: fetched.value.pages.length, dropped: 0 },
+      });
+    }
     case "manual": {
       if (input.dbname === "") return pickerErr("DBNAME_MISSING", STRINGS.dbnameRequired);
       const normalized = normalizeManualText(input.text);

@@ -11,6 +11,7 @@ const blank: FormState = {
   sparqlEndpoint: "https://query.wikidata.org/sparql",
   sparqlQuery: "",
   quarryUrl: "",
+  wikiproject: "",
 };
 
 let patches: Array<Partial<FormState>>;

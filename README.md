@@ -43,8 +43,8 @@ prefixes). Invalid entries block confirmation with an explanatory message.
 This does not add a total input-size cap or a nonempty-selection requirement.
 
 The **WikiProject** tab lists projects tracked by WP1 and loads their complete
-article lists into `enwiki` selections. WP1 restricts browser origins; embedding
-sites outside its CORS allowlist need the picker's existing `proxy` setting.
+article lists into `enwiki` selections. Project lists and articles load directly
+from WP1 using CORS; the WikiProject tab does not use the `proxy` setting.
 See [WikiProject usage](packages/selection-picker/README.md#wikiproject).
 
 ## npm packages

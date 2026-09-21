@@ -9,9 +9,9 @@ the host's concern.
 Lit 3, Shadow DOM, native `<dialog>`, constructable stylesheets, no `eval` —
 CSP-safe. Selection parsing and validation come from
 [`@audiodude/selection-core`](https://github.com/audiodude/mw-selections/tree/main/packages/selection-core).
-Upstream requests go directly from the browser unless `proxy` is configured.
-PetScan, WDQS, and Quarry support cross-origin requests; WP1 restricts origins
-(see *WikiProject* below).
+PetScan, WDQS, and Quarry requests go directly from the browser unless `proxy`
+is configured. WikiProject requests always go directly; all four services
+support cross-origin requests.
 
 ## Install in an application
 
@@ -66,7 +66,7 @@ bundle or the normal npm entry, not both.
 | `dbname` | Comma-separated **allowlist** of dbnames. One entry pins the project and hides the project field. Several entries restrict the project field. Absent: every Wikimedia project is offered. A source-derived dbname outside the list is a hard error, phrased as domains ("Your URL names de.wikipedia.org, but this page is only configured to accept en.wikipedia.org."). |
 | `max-bytes` | Cap on the UTF-8 byte length of the canonical Selection JSON. Exceeding it rejects; the widget never truncates. |
 | `max-items` | Cap on `pages.length`. Same semantics. |
-| `proxy` | Optional escape hatch for hosts running their own materializer. Materializer requests (PetScan, WDQS, Quarry, WP1 project lists/articles, and English Wikipedia namespace metadata) become `<proxy>?url=<encoded upstream URL>`; the proxy must return the upstream body unchanged. The sitematrix is never proxied — it always loads directly from meta. Nothing defaults to it. |
+| `proxy` | Optional escape hatch for hosts running their own materializer. PetScan, WDQS, and Quarry requests become `<proxy>?url=<encoded upstream URL>`; the proxy must return the upstream body unchanged. WikiProject requests (including English Wikipedia namespace metadata) and the sitematrix are never proxied. Nothing defaults to it. |
 
 ## API
 
@@ -127,13 +127,9 @@ the WP1 project name and `url` is its articles endpoint. Reopening a selection
 prefills that project; Load fetches its current articles. Consumers that do
 not recognize this source type must treat the materialized pages as static.
 
-**CORS:** WP1 currently permits the WP1 frontend origin, but not arbitrary
-embedding sites, including this repository's demo domain. Such hosts must
-configure the existing `proxy` attribute, or arrange for WP1 to allow their
-origin. No public proxy is supplied or used by default. A host proxy must allow
-`https://api.wp1.openzim.org/v1/projects/` and its project article endpoints,
-plus English Wikipedia's `/w/api.php` siteinfo request. Restrict upstream
-destinations rather than exposing an unrestricted forwarding proxy.
+**CORS:** WP1 permits cross-origin requests to its project list and article
+endpoints. WikiProject requests always go directly to WP1, and namespace
+metadata goes directly to English Wikipedia, even when `proxy` is configured.
 
 ## dbname sources
 

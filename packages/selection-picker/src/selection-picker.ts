@@ -217,10 +217,10 @@ export class SelectionPicker extends LitElement {
     return this.fetchImpl ?? defaultFetch();
   }
 
-  /** Materializer fetches: honors the `proxy` escape hatch and the load's abort signal. */
-  #fetch(signal: AbortSignal): FetchLike {
+  /** Abortable fetch; WikiProject requests bypass the materializer proxy. */
+  #fetch(signal: AbortSignal, useProxy = true): FetchLike {
     const base = this.#rawFetch;
-    const inner = this.proxy === null || this.proxy === "" ? base : proxyFetch(this.proxy, base);
+    const inner = !useProxy || this.proxy === null || this.proxy === "" ? base : proxyFetch(this.proxy, base);
     return (url, init) => inner(url, { ...init, signal });
   }
 
@@ -231,7 +231,7 @@ export class SelectionPicker extends LitElement {
     this._projectsBusy = true;
     this._projectsError = undefined;
     try {
-      const result = await loadWikiProjects(this.#fetch(loading.signal));
+      const result = await loadWikiProjects(this.#fetch(loading.signal, false));
       if (loading.signal.aborted) return;
       if (result.ok) this._wikiprojects = result.value;
       else this._projectsError = `${STRINGS.wikiprojectUnavailable} ${userMessage(result.error)}`;
@@ -274,7 +274,7 @@ export class SelectionPicker extends LitElement {
       }
       const result = await ingest(input, {
         sitematrix,
-        fetch: this.#fetch(loading.signal),
+        fetch: this.#fetch(loading.signal, input.mode !== "wikiproject"),
         allowlist,
         ...(this.maxBytes === null ? {} : { maxBytes: this.maxBytes }),
         ...(this.maxItems === null ? {} : { maxItems: this.maxItems }),

@@ -496,6 +496,47 @@ test("a file that fails to read clears busy so a later load can succeed", async 
   );
 });
 
+test("WikiProject autocomplete filters, supports keyboard selection, and dismisses without cancelling", async () => {
+  const el = mount(`dbname="enwiki"`, [
+    { match: "/projects/", json: [{ name: "Chess" }, { name: "Metaphysics" }, { name: "Physics" }] },
+  ]);
+  el.open().catch(() => {});
+  await settle(el);
+  await click(el, "nav button[data-mode=wikiproject]");
+  const input = shadow<HTMLInputElement>(el, "input[part=wikiproject]");
+  input.focus();
+  setValue(input, "pHyS");
+  await settle(el);
+  expect([...el.renderRoot.querySelectorAll('[role=option]')].map((option) => option.textContent)).toEqual([
+    "Metaphysics", "Physics",
+  ]);
+  input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+  await settle(el);
+  input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+  await settle(el);
+  input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+  await settle(el);
+  expect(input.value).toBe("Physics");
+  expect(input.getAttribute("aria-expanded")).toBe("false");
+
+  setValue(input, "no-such-project");
+  await settle(el);
+  expect(el.renderRoot.querySelectorAll('[role=option]')).toHaveLength(0);
+  expect(shadow(el, '[part=wikiproject-popup] [role=status]').textContent).toBeTruthy();
+  input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+  await settle(el);
+  input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  await settle(el);
+  expect(input.getAttribute("aria-expanded")).toBe("false");
+  expect(shadow<HTMLDialogElement>(el, "dialog").open).toBe(true);
+
+  setValue(input, "phys");
+  await settle(el);
+  await click(el, '[role=option]');
+  expect(input.value).toBe("Metaphysics");
+  expect(input.getAttribute("aria-expanded")).toBe("false");
+});
+
 test("WikiProject selection works directly even when a host proxy is configured", async () => {
   const el = mount(`dbname="enwiki" proxy="https://unavailable.example/proxy"`, [
     { match: /^https:\/\/api\.wp1\.openzim\.org\/v1\/projects\/$/, json: [{ name: "Test" }] },

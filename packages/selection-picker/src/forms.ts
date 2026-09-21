@@ -1,6 +1,7 @@
 import { html, nothing, type TemplateResult } from "lit";
 import type { Mode } from "./ingest.js";
 import { STRINGS } from "./strings.js";
+import { WikiProjectInput } from "./wikiproject-input.js";
 
 /** Everything the user can type. The element owns it; forms only read it. */
 export interface FormState {
@@ -59,19 +60,14 @@ export function renderForm(
   const project = showProject ? renderProjectPicker(state.dbname, domains, cb) : nothing;
   switch (mode) {
     case "wikiproject":
-      return html`<label>
-        <span>${STRINGS.wikiprojectLabel}</span>
-        <input
-          part="wikiproject"
-          list="sp-wikiprojects"
-          placeholder=${STRINGS.wikiprojectPlaceholder}
-          .value=${state.wikiproject}
-          @input=${(e: Event) => cb.update({ wikiproject: (e.target as HTMLInputElement).value })}
-        />
-        <datalist id="sp-wikiprojects">
-          ${wikiprojects.map((name) => html`<option value=${name}></option>`)}
-        </datalist>
-      </label>
+      if (!customElements.get("sp-wikiproject-input")) {
+        customElements.define("sp-wikiproject-input", WikiProjectInput);
+      }
+      return html`<sp-wikiproject-input
+        .value=${state.wikiproject}
+        .projects=${wikiprojects}
+        @project-change=${(event: CustomEvent<string>) => cb.update({ wikiproject: event.detail })}
+      ></sp-wikiproject-input>
       <p>${STRINGS.wikiprojectHint}</p>`;
     case "manual":
       return html`${project}

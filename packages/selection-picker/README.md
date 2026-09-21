@@ -113,9 +113,12 @@ acceptance) so a host's own gate cannot be the first thing to reject it.
 ### WikiProject
 
 The tab fetches the available WikiProjects from WP1's `/v1/projects/`
-endpoint when opened. Type to search the list, choose a project, then click
-**Load**. It fetches every page of `/v1/projects/{projectId}/articles`, not just
-the first page, and emits an `enwiki` selection. Duplicate pages are removed;
+endpoint when opened. Type to filter project names; matching suggestions appear
+in a bounded, scrollable panel beneath the field. Click a suggestion or use
+Up/Down and Enter to choose it. Escape dismisses suggestions without closing
+the picker. Then click **Load**. It fetches every page of
+`/v1/projects/{projectId}/articles`, not just the first page, and emits an
+`enwiki` selection. Duplicate pages are removed;
 namespace prefixes are resolved using English Wikipedia's siteinfo, so
 categories and other non-mainspace pages retain their namespace IDs. Existing
 `dbname`, `max-items`, and `max-bytes` policies apply; failures never emit a

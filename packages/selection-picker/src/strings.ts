@@ -34,6 +34,7 @@ export const STRINGS = {
   wikiprojectLoading: "Loading WikiProjects…",
   wikiprojectUnavailable: "Could not load WikiProjects.",
   wikiprojectEmpty: "WP1 returned no WikiProjects.",
+  wikiprojectNoMatches: "No matching WikiProjects.",
   retry: "Retry",
   projectLabel: "Wikimedia project",
   projectPlaceholder: "en.wikipedia.org",

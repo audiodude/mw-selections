@@ -75,6 +75,60 @@ export const pickerStyles = css`
     resize: none;
   }
 
+  sp-wikiproject-input {
+    display: block;
+    position: relative;
+    min-width: 0;
+  }
+
+  input[part="wikiproject"]:focus {
+    outline: 2px solid #3e50cc;
+    outline-offset: 2px;
+  }
+
+  div[part="wikiproject-popup"] {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 1;
+    max-height: min(15rem, 35vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid #dadde3;
+    border-radius: 3px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.15);
+  }
+
+  div[part="wikiproject-popup"] ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  div[part="wikiproject-popup"] li {
+    padding: 0.5rem 0.65rem;
+    border-bottom: 1px solid #eaecf0;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+  }
+
+  div[part="wikiproject-popup"] li:last-child {
+    border-bottom: 0;
+  }
+
+  div[part="wikiproject-popup"] li:hover,
+  div[part="wikiproject-popup"] li[aria-selected="true"] {
+    background: #eef0ff;
+  }
+
+  div[part="wikiproject-popup"] p {
+    margin: 0;
+    padding: 0.65rem;
+    color: #54595d;
+  }
+
   div[part="status"] {
     /* Reserve one line so an error or summary appearing does not shift the footer. */
     min-height: 1.5rem;

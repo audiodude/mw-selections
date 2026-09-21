@@ -1,6 +1,6 @@
 {
   "name": "@audiodude/selection-picker",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "A Lit web component for choosing MediaWiki page selections.",
   "license": "MIT",
@@ -9,8 +9,14 @@
     "url": "git+https://github.com/audiodude/mw-selections.git",
     "directory": "packages/selection-picker"
   },
-  "publishConfig": { "access": "public" },
-  "files": ["dist", "README.md", "LICENSE"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -23,7 +29,10 @@
       "import": "./dist/selection-picker.min.js"
     }
   },
-  "sideEffects": ["./dist/index.js", "./dist/selection-picker.min.js"],
+  "sideEffects": [
+    "./dist/index.js",
+    "./dist/selection-picker.min.js"
+  ],
   "dependencies": {
     "@audiodude/selection-core": "^0.1.0",
     "lit": "^3.3.3"

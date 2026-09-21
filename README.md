@@ -101,9 +101,9 @@ publish or deploy.
 
 ### Manual release
 
-Keep both package versions aligned, and update picker's compatible core
-dependency and the lockfile when advancing versions. Run the checks above first.
-From the repository root, produce the release artifacts:
+Version packages independently: bump only changed packages, updating picker's
+compatible core dependency when needed and keeping the lockfile current.
+Run the checks above first. From the repository root, pack changed packages:
 
 ```sh
 npm pack --workspace=@audiodude/selection-core
@@ -113,11 +113,11 @@ npm pack --workspace=@audiodude/selection-picker
 The `prepack` hooks rebuild automatically; picker also builds core first.
 Inspect the resulting tarballs before publishing. When a release is explicitly
 authorized and npm authentication/scope permissions are configured, publish
-**core first**, then picker:
+the changed packages. If both changed, publish **core first**, then picker.
+For the picker-only 0.2.0 release, core stays at 0.1.0:
 
 ```sh
-npm publish ./audiodude-selection-core-0.1.0.tgz --access public
-npm publish ./audiodude-selection-picker-0.1.0.tgz --access public
+npm publish ./audiodude-selection-picker-0.2.0.tgz --access public
 ```
 
 Use the new version in these filenames for subsequent releases. Publish from

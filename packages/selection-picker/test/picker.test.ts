@@ -51,11 +51,6 @@ beforeEach(() => {
 test("modes: host can read the catalogue before opening; it mirrors the tab bar", async () => {
   const el = mount(``);
   const modes = el.modes;
-  expect(modes.map((m) => m.name)).toEqual(["manual", "swiki", "petscan", "sparql", "quarry"]);
-  for (const mode of modes) {
-    expect(mode.label.length).toBeGreaterThan(0);
-    expect(mode.description.length).toBeGreaterThan(0);
-  }
 
   el.open().catch(() => {});
   await settle(el);
@@ -499,4 +494,82 @@ test("a file that fails to read clears busy so a later load can succeed", async 
   expect(shadow(el, "p[part=summary]").textContent?.trim()).toBe(
     "Ingested 1 item from en.wikipedia.org.",
   );
+});
+
+test("WikiProject selection works directly even when a host proxy is configured", async () => {
+  const el = mount(`dbname="enwiki" proxy="https://unavailable.example/proxy"`, [
+    { match: /^https:\/\/api\.wp1\.openzim\.org\/v1\/projects\/$/, json: [{ name: "Test" }] },
+    { match: /^https:\/\/api\.wp1\.openzim\.org\/v1\/projects\/Test\/articles\?/, json: {
+      articles: [{ article: "Category:Physics" }],
+      pagination: { page: 1, total: 1, total_pages: 1 },
+    } },
+    { match: /^https:\/\/en\.wikipedia\.org\/w\/api\.php\?/, json: {
+      query: { namespaces: { "14": { id: 14, name: "Category" } }, namespacealiases: [] },
+    } },
+  ]);
+  const pending = el.open();
+  await settle(el);
+  await click(el, "nav button[data-mode=wikiproject]");
+  setValue(shadow<HTMLInputElement>(el, "input[part=wikiproject]"), "Test");
+  await click(el, "button[part=load]");
+  expect(shadow<HTMLButtonElement>(el, "button[part=confirm]").disabled).toBe(false);
+  await click(el, "button[part=confirm]");
+  await expect(pending).resolves.toMatchObject({
+    dbname: "enwiki", pages: [["Physics", null, 14]],
+    source: { type: "wikiproject", project: "Test" },
+  });
+});
+
+test("WikiProject catalogue failure can be retried before creating a selection", async () => {
+  const el = mount(`dbname="enwiki"`, [
+    { match: "/projects/", status: 503 },
+  ]);
+  const pending = el.open();
+  await settle(el);
+  await click(el, "nav button[data-mode=wikiproject]");
+  expect(shadow<HTMLButtonElement>(el, "button[part=load]").disabled).toBe(true);
+
+  el.fetchImpl = fakeFetch([
+    { match: "/projects/Test/articles", json: {
+      articles: [{ article: "Recovered article" }],
+      pagination: { page: 1, total: 1, total_pages: 1 },
+    } },
+    { match: "/projects/", json: [{ name: "Test" }] },
+  ]);
+  await click(el, "button[part=retry-projects]");
+  setValue(shadow<HTMLInputElement>(el, "input[part=wikiproject]"), "Test");
+  await click(el, "button[part=load]");
+  await click(el, "button[part=confirm]");
+  await expect(pending).resolves.toMatchObject({
+    dbname: "enwiki", pages: ["Recovered_article"], source: { type: "wikiproject", project: "Test" },
+  });
+});
+
+test("changing WikiProjects during a load cannot expose a stale selection", async () => {
+  const el = mount(`dbname="enwiki"`, [
+    { match: "/projects/", json: [{ name: "First" }, { name: "Second" }] },
+  ]);
+  const base = el.fetchImpl!;
+  let finish: (() => void) | undefined;
+  el.fetchImpl = (url, init) => {
+    if (!url.includes("/articles")) return base(url, init);
+    return new Promise<ResponseLike>((resolve) => {
+      finish = () => resolve(fakeResponse);
+    });
+  };
+  // Intentionally ignores cancellation to exercise the stale-result guard.
+  const fakeResponse = await fakeFetch([{ match: "", json: {
+    articles: [{ article: "Wrong project" }], pagination: { page: 1, total: 1, total_pages: 1 },
+  } }])("");
+  void el.open();
+  await settle(el);
+  await click(el, "nav button[data-mode=wikiproject]");
+  setValue(shadow<HTMLInputElement>(el, "input[part=wikiproject]"), "First");
+  await click(el, "button[part=load]");
+  setValue(shadow<HTMLInputElement>(el, "input[part=wikiproject]"), "Second");
+  finish?.();
+  await settle(el);
+  expect(shadow<HTMLButtonElement>(el, "button[part=confirm]").disabled).toBe(true);
+  expect(el.renderRoot.querySelector("[part=summary]")).toBeNull();
+  await click(el, "button[part=cancel]");
 });

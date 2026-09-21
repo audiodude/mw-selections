@@ -11,7 +11,8 @@ export type PickerErrorCode =
   | "DBNAME_NOT_ALLOWED"
   | "MAX_BYTES_EXCEEDED"
   | "MAX_ITEMS_EXCEEDED"
-  | "URL_INVALID";
+  | "URL_INVALID"
+  | "WIKIPROJECT_REQUIRED";
 
 export interface PickerError {
   code: PickerErrorCode;

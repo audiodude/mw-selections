@@ -2,15 +2,16 @@
 
 `<selection-picker>` — an embeddable custom element that lets a user of any
 web tool build a [Selection](https://github.com/audiodude/mw-selections/blob/main/docs/SPEC.md) from pasted titles, a
-`.swiki` upload, a PetScan URL, a SPARQL query, or a Quarry URL, and hands
-the host canonical Selection JSON. Create-only: editing a stored Selection is
+`.swiki` upload, a PetScan URL, a SPARQL query, a Quarry URL, or a WikiProject,
+and hands the host canonical Selection JSON. Create-only: editing a stored Selection is
 the host's concern.
 
 Lit 3, Shadow DOM, native `<dialog>`, constructable stylesheets, no `eval` —
-CSP-safe. All parsing, mapping, and validation come from
-[`@audiodude/selection-core`](https://github.com/audiodude/mw-selections/tree/main/packages/selection-core); all upstream fetches go
-directly from the browser (PetScan, WDQS, and Quarry all serve
-`Access-Control-Allow-Origin: *`).
+CSP-safe. Selection parsing and validation come from
+[`@audiodude/selection-core`](https://github.com/audiodude/mw-selections/tree/main/packages/selection-core).
+PetScan, WDQS, and Quarry requests go directly from the browser unless `proxy`
+is configured. WikiProject requests always go directly; all four services
+support cross-origin requests.
 
 ## Install in an application
 
@@ -65,7 +66,7 @@ bundle or the normal npm entry, not both.
 | `dbname` | Comma-separated **allowlist** of dbnames. One entry pins the project and hides the project field. Several entries restrict the project field. Absent: every Wikimedia project is offered. A source-derived dbname outside the list is a hard error, phrased as domains ("Your URL names de.wikipedia.org, but this page is only configured to accept en.wikipedia.org."). |
 | `max-bytes` | Cap on the UTF-8 byte length of the canonical Selection JSON. Exceeding it rejects; the widget never truncates. |
 | `max-items` | Cap on `pages.length`. Same semantics. |
-| `proxy` | Optional escape hatch for hosts running their own materializer. Materializer requests (PetScan, WDQS, Quarry) become `<proxy>?url=<encoded upstream URL>`; the proxy must return the upstream body unchanged. The sitematrix is never proxied — it always loads directly from meta. Nothing defaults to it. |
+| `proxy` | Optional escape hatch for hosts running their own materializer. PetScan, WDQS, and Quarry requests become `<proxy>?url=<encoded upstream URL>`; the proxy must return the upstream body unchanged. WikiProject requests (including English Wikipedia namespace metadata) and the sitematrix are never proxied. Nothing defaults to it. |
 
 ## API
 
@@ -74,7 +75,7 @@ bundle or the normal npm entry, not both.
   `AbortError` if the user cancels or closes the dialog. Requires the
   element to be in the document; calling it while the dialog is already
   open throws. Without a seed the form starts blank — every call is a
-  fresh create session. `seed` prefills one mode: `petscan`/`quarry`/`sparql`
+  fresh create session. `seed` prefills one mode: `petscan`/`quarry`/`sparql`/`wikiproject`
   seeds reopen the **query** (reloading re-materializes it); `simple`,
   `swiki`, unrecognized, and absent source types rehydrate the pages as
   editable title lines and therefore emit `source: {type: "simple"}`. Title
@@ -85,7 +86,7 @@ bundle or the normal npm entry, not both.
   `detail` is the same Selection the promise resolves with.
 - `modes: readonly PickerMode[]` — the widget's input modes in tab order,
   each `{name, label, description}` (`name` is a `Mode`:
-  `manual | swiki | petscan | sparql | quarry`). Readable before the dialog
+  `manual | swiki | petscan | sparql | quarry | wikiproject`). Readable before the dialog
   has ever opened, so a host can render its own "Create from…" affordance
   or help text. Static: the `dbname` allowlist restricts projects, not
   modes. The same array is exported as `PICKER_MODES` for hosts rendering
@@ -102,15 +103,38 @@ bundle or the normal npm entry, not both.
 | PetScan | `{type: "petscan", url, dynamic: true}` |
 | SPARQL | `{type: "sparql", endpoint, query, dynamic: true}` |
 | Quarry | `{type: "quarry", url, dynamic: true}` |
+| WikiProject | `{type: "wikiproject", project, url, dynamic: true}` |
 
 Every emitted Selection passes `selection-core`'s structural gate
 (`validateSelection`) before the widget hands it over. SPEC §8 assigns that
 gate to the *storing system*; the widget runs the same check first (task 03
 acceptance) so a host's own gate cannot be the first thing to reject it.
 
+### WikiProject
+
+The tab fetches the available WikiProjects from WP1's `/v1/projects/`
+endpoint when opened. Type to search the list, choose a project, then click
+**Load**. It fetches every page of `/v1/projects/{projectId}/articles`, not just
+the first page, and emits an `enwiki` selection. Duplicate pages are removed;
+namespace prefixes are resolved using English Wikipedia's siteinfo, so
+categories and other non-mainspace pages retain their namespace IDs. Existing
+`dbname`, `max-items`, and `max-bytes` policies apply; failures never emit a
+partial list. Cancelling, switching tabs, or changing the project discards
+in-flight article results.
+
+`wikiproject` is a picker-defined source extension (SPEC §6.1). `project` is
+the WP1 project name and `url` is its articles endpoint. Reopening a selection
+prefills that project; Load fetches its current articles. Consumers that do
+not recognize this source type must treat the materialized pages as static.
+
+**CORS:** WP1 permits cross-origin requests to its project list and article
+endpoints. WikiProject requests always go directly to WP1, and namespace
+metadata goes directly to English Wikipedia, even when `proxy` is configured.
+
 ## dbname sources
 
 `dbname` is never guessed. PetScan and Quarry report it (SPEC §7.3, §7.5);
+WikiProject uses `enwiki`, the wiki tracked by WP1;
 `.swiki` carries it in the filename (§5.1) and the widget prompts when it
 does not (§7.2); pasted titles and SPARQL take it as user input (§7.4).
 §5.1's optional sidecar-JSON channel is not exposed in v1 — the picker has

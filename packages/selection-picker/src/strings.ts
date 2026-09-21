@@ -11,6 +11,7 @@ export const STRINGS = {
     petscan: "PetScan",
     sparql: "SPARQL",
     quarry: "Quarry",
+    wikiproject: "WikiProject",
   },
   modeDescriptions: {
     manual: "Paste page titles or wiki URLs, one per line.",
@@ -18,6 +19,7 @@ export const STRINGS = {
     petscan: "Load the pages returned by a PetScan query URL.",
     sparql: "Load the pages returned by a SPARQL query.",
     quarry: "Load the pages returned by a Quarry query URL.",
+    wikiproject: "Load all articles assessed by an English Wikipedia WikiProject.",
   },
   manualLabel: "One title or wiki URL per line. Lines beginning with # are ignored.",
   swikiLabel: "A .swiki or TSV file: item_title, optional id, optional namespace_id.",
@@ -25,6 +27,14 @@ export const STRINGS = {
   sparqlEndpointLabel: "SPARQL endpoint",
   sparqlQueryLabel: "SPARQL query",
   quarryLabel: "Quarry query URL",
+  wikiprojectLabel: "WikiProject",
+  wikiprojectHint: "Projects tracked by WP1 on English Wikipedia. Loads all articles.",
+  wikiprojectPlaceholder: "Search for a WikiProject",
+  wikiprojectRequired: "Choose a WikiProject from the list first.",
+  wikiprojectLoading: "Loading WikiProjects…",
+  wikiprojectUnavailable: "Could not load WikiProjects.",
+  wikiprojectEmpty: "WP1 returned no WikiProjects.",
+  retry: "Retry",
   projectLabel: "Wikimedia project",
   projectPlaceholder: "en.wikipedia.org",
   noFile: "No file selected",
@@ -77,6 +87,7 @@ export function userMessage(error: PickerError): string {
     case "DBNAME_INVALID":
     case "QUARRY_NO_TITLE_COLUMN":
     case "URL_INVALID":
+    case "WIKIPROJECT_REQUIRED":
     case "TITLE_FORBIDDEN_CHAR":
     case "TITLE_TOO_LONG":
       return error.message;

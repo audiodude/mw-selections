@@ -14,6 +14,7 @@ import { seedState } from "./seed.js";
 import { loadSitematrix } from "./sitematrix-source.js";
 import { pickerStyles } from "./styles.js";
 import { STRINGS, userMessage } from "./strings.js";
+import { loadWikiProjects } from "./wikiproject.js";
 
 const BLANK_STATE: FormState = {
   dbname: "",
@@ -23,6 +24,7 @@ const BLANK_STATE: FormState = {
   sparqlEndpoint: "https://query.wikidata.org/sparql",
   sparqlQuery: "",
   quarryUrl: "",
+  wikiproject: "",
 };
 
 /**
@@ -43,6 +45,9 @@ export class SelectionPicker extends LitElement {
     _ready: { state: true },
     _error: { state: true },
     _outcome: { state: true },
+    _wikiprojects: { state: true },
+    _projectsBusy: { state: true },
+    _projectsError: { state: true },
   };
 
   /** Comma-separated allowlist constraint; absent → the user picks. */
@@ -67,6 +72,9 @@ export class SelectionPicker extends LitElement {
   declare private _ready: boolean;
   declare private _error: string | undefined;
   declare private _outcome: IngestOutcome | undefined;
+  declare private _wikiprojects: string[] | undefined;
+  declare private _projectsBusy: boolean;
+  declare private _projectsError: string | undefined;
 
   #sitematrix?: Sitematrix;
   #resolve?: (selection: Selection) => void;
@@ -74,6 +82,7 @@ export class SelectionPicker extends LitElement {
   #file?: File;
   /** The in-flight Load; aborted when the session ends so it cannot leak into the next. */
   #loading?: AbortController;
+  #projectsLoading?: AbortController;
   /**
    * Dialog close events still owed to sessions that were already settled
    * programmatically (#confirm, disconnectedCallback). Real browsers
@@ -96,11 +105,13 @@ export class SelectionPicker extends LitElement {
    */
   readonly #callbacks: FormCallbacks = {
     update: (patch) => {
+      this.#cancelLoad();
       this._form = { ...this._form, ...patch };
       this._outcome = undefined; // a stale result must never be confirmable
       this._error = undefined;
     },
     selectFile: (file) => {
+      this.#cancelLoad();
       this.#file = file ?? undefined;
       this._form = { ...this._form, filename: file?.name ?? "" };
       this._outcome = undefined;
@@ -120,6 +131,7 @@ export class SelectionPicker extends LitElement {
     this._ready = false;
     this._error = undefined;
     this._outcome = undefined;
+    this._projectsBusy = false;
   }
 
   /**
@@ -179,6 +191,7 @@ export class SelectionPicker extends LitElement {
   async #show(): Promise<void> {
     await this.updateComplete;
     this.#dialog.showModal();
+    if (this._mode === "wikiproject") void this.#loadProjects();
     if (this.#sitematrix !== undefined) return;
     // The sitematrix always loads directly from meta (CORS-open via
     // origin=*): the proxy is decision #3's escape hatch for the
@@ -204,17 +217,48 @@ export class SelectionPicker extends LitElement {
     return this.fetchImpl ?? defaultFetch();
   }
 
-  /** Materializer fetches: honors the `proxy` escape hatch and the load's abort signal. */
-  #fetch(signal: AbortSignal): FetchLike {
+  /** Abortable fetch; WikiProject requests bypass the materializer proxy. */
+  #fetch(signal: AbortSignal, useProxy = true): FetchLike {
     const base = this.#rawFetch;
-    const inner = this.proxy === null || this.proxy === "" ? base : proxyFetch(this.proxy, base);
+    const inner = !useProxy || this.proxy === null || this.proxy === "" ? base : proxyFetch(this.proxy, base);
     return (url, init) => inner(url, { ...init, signal });
+  }
+
+  async #loadProjects(): Promise<void> {
+    if (this._wikiprojects !== undefined || this._projectsBusy) return;
+    const loading = new AbortController();
+    this.#projectsLoading = loading;
+    this._projectsBusy = true;
+    this._projectsError = undefined;
+    try {
+      const result = await loadWikiProjects(this.#fetch(loading.signal, false));
+      if (loading.signal.aborted) return;
+      if (result.ok) this._wikiprojects = result.value;
+      else this._projectsError = `${STRINGS.wikiprojectUnavailable} ${userMessage(result.error)}`;
+    } catch {
+      if (!loading.signal.aborted) this._projectsError = STRINGS.wikiprojectUnavailable;
+    } finally {
+      if (this.#projectsLoading === loading) {
+        this.#projectsLoading = undefined;
+        this._projectsBusy = false;
+      }
+    }
+  }
+
+  #cancelLoad(): void {
+    this.#loading?.abort();
+    this.#loading = undefined;
+    this._busy = false;
   }
 
   async #load(): Promise<void> {
     if (this._busy) return; // a second Load must not race the first
     const sitematrix = this.#sitematrix;
     if (sitematrix === undefined) return;
+    if (this._mode === "wikiproject" && !this._wikiprojects?.includes(this._form.wikiproject)) {
+      this._error = STRINGS.wikiprojectRequired;
+      return;
+    }
     const loading = new AbortController();
     this.#loading = loading;
     this._busy = true;
@@ -230,7 +274,7 @@ export class SelectionPicker extends LitElement {
       }
       const result = await ingest(input, {
         sitematrix,
-        fetch: this.#fetch(loading.signal),
+        fetch: this.#fetch(loading.signal, input.mode !== "wikiproject"),
         allowlist,
         ...(this.maxBytes === null ? {} : { maxBytes: this.maxBytes }),
         ...(this.maxItems === null ? {} : { maxItems: this.maxItems }),
@@ -289,13 +333,20 @@ export class SelectionPicker extends LitElement {
         };
       case "quarry":
         return { mode: "quarry", url: form.quarryUrl.trim() };
+      case "wikiproject":
+        return { mode: "wikiproject", project: form.wikiproject };
     }
   }
 
   #setMode(mode: Mode): void {
+    this.#cancelLoad();
+    this.#projectsLoading?.abort();
+    this.#projectsLoading = undefined;
+    this._projectsBusy = false;
     this._mode = mode;
     this._outcome = undefined;
     this._error = undefined;
+    if (mode === "wikiproject") void this.#loadProjects();
   }
 
   #confirm(): void {
@@ -343,9 +394,10 @@ export class SelectionPicker extends LitElement {
   }
 
   #abort(): void {
-    this.#loading?.abort();
-    this.#loading = undefined;
-    this._busy = false;
+    this.#cancelLoad();
+    this.#projectsLoading?.abort();
+    this.#projectsLoading = undefined;
+    this._projectsBusy = false;
     const reject = this.#reject;
     this.#resolve = undefined;
     this.#reject = undefined;
@@ -383,9 +435,22 @@ export class SelectionPicker extends LitElement {
           projectIsUserInput && allowlist.length !== 1,
           domains,
           this.#callbacks,
+          this._wikiprojects,
         )}
       </section>
       <div part="status">
+        ${this._mode !== "wikiproject"
+          ? nothing
+          : this._projectsBusy
+            ? html`<p role="status">${STRINGS.wikiprojectLoading}</p>`
+            : this._projectsError !== undefined
+              ? html`<p role="alert">${this._projectsError}</p>
+                  <button part="retry-projects" @click=${() => void this.#loadProjects()}>
+                    ${STRINGS.retry}
+                  </button>`
+              : this._wikiprojects?.length === 0
+                ? html`<p role="status">${STRINGS.wikiprojectEmpty}</p>`
+                : nothing}
         ${this._error === undefined
           ? nothing
           : html`<p part="error" role="alert">${this._error}</p>`}
@@ -403,7 +468,8 @@ export class SelectionPicker extends LitElement {
         <button part="cancel" @click=${() => this.#dialog.close()}>${STRINGS.cancel}</button>
         <button
           part="load"
-          ?disabled=${this._busy || !this._ready}
+          ?disabled=${this._busy || !this._ready ||
+            (this._mode === "wikiproject" && (this._projectsBusy || this._wikiprojects === undefined))}
           @click=${() => void this.#load()}
         >
           ${this._busy ? STRINGS.loading : STRINGS.load}

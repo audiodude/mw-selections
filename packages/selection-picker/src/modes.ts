@@ -10,7 +10,7 @@ export interface PickerMode {
   description: string;
 }
 
-const ORDER: readonly Mode[] = ["manual", "swiki", "petscan", "sparql", "quarry"];
+const ORDER: readonly Mode[] = ["manual", "swiki", "petscan", "sparql", "quarry", "wikiproject"];
 
 /**
  * The widget's static catalogue of input modes, in tab order. It does not

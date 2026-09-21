@@ -13,6 +13,7 @@ export interface FormState {
   sparqlEndpoint: string;
   sparqlQuery: string;
   quarryUrl: string;
+  wikiproject: string;
 }
 
 export interface FormCallbacks {
@@ -53,9 +54,25 @@ export function renderForm(
   showProject: boolean,
   domains: string[],
   cb: FormCallbacks,
+  wikiprojects: readonly string[] = [],
 ): TemplateResult {
   const project = showProject ? renderProjectPicker(state.dbname, domains, cb) : nothing;
   switch (mode) {
+    case "wikiproject":
+      return html`<label>
+        <span>${STRINGS.wikiprojectLabel}</span>
+        <input
+          part="wikiproject"
+          list="sp-wikiprojects"
+          placeholder=${STRINGS.wikiprojectPlaceholder}
+          .value=${state.wikiproject}
+          @input=${(e: Event) => cb.update({ wikiproject: (e.target as HTMLInputElement).value })}
+        />
+        <datalist id="sp-wikiprojects">
+          ${wikiprojects.map((name) => html`<option value=${name}></option>`)}
+        </datalist>
+      </label>
+      <p>${STRINGS.wikiprojectHint}</p>`;
     case "manual":
       return html`${project}
         <label>

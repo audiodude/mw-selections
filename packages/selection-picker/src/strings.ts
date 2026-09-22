@@ -42,6 +42,8 @@ export const STRINGS = {
   load: "Load",
   loading: "Loading…",
   confirm: "Use selection",
+  useSubset: (mode: "first" | "last" | "random", count: number) =>
+    `Use ${mode} ${num.format(count)}`,
   cancel: "Cancel",
   noFileChosen: "Choose a .swiki or TSV file first.",
   dbnameRequired: "Choose a Wikimedia project first.",

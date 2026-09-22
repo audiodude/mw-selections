@@ -5,6 +5,7 @@ import {
   type Sitematrix,
 } from "@audiodude/selection-core";
 import { html, LitElement, nothing, type TemplateResult } from "lit";
+import { checkCaps } from "./caps.js";
 import { parseAllowlist, resolveDbname } from "./dbname.js";
 import { renderForm, type FormCallbacks, type FormState } from "./forms.js";
 import { ingest, type IngestInput, type IngestOutcome, type Mode } from "./ingest.js";
@@ -276,8 +277,6 @@ export class SelectionPicker extends LitElement {
         sitematrix,
         fetch: this.#fetch(loading.signal, input.mode !== "wikiproject"),
         allowlist,
-        ...(this.maxBytes === null ? {} : { maxBytes: this.maxBytes }),
-        ...(this.maxItems === null ? {} : { maxItems: this.maxItems }),
       });
       // The session that started this load is gone: its result — including
       // the AbortError the aborted fetch surfaces as — belongs to nobody.
@@ -287,6 +286,8 @@ export class SelectionPicker extends LitElement {
         return;
       }
       this._outcome = result.value;
+      const caps = this.#checkCaps(result.value.selection);
+      if (!caps.ok) this._error = userMessage(caps.error);
     } catch (thrown) {
       if (loading.signal.aborted) return;
       // #buildInput can genuinely throw — file.arrayBuffer() rejects with
@@ -349,9 +350,48 @@ export class SelectionPicker extends LitElement {
     if (mode === "wikiproject") void this.#loadProjects();
   }
 
+  #checkCaps(selection: Selection) {
+    return checkCaps(selection, {
+      ...(this.maxBytes === null ? {} : { maxBytes: this.maxBytes }),
+      ...(this.maxItems === null ? {} : { maxItems: this.maxItems }),
+    });
+  }
+
+  #useSubset(mode: "first" | "last" | "random"): void {
+    const outcome = this._outcome;
+    const count = Math.floor(this.maxItems ?? 0);
+    if (outcome === undefined || count < 1 || outcome.selection.pages.length <= count) return;
+    const original = outcome.selection.pages;
+    let pages: Selection["pages"];
+    if (mode === "random") {
+      // Reservoir sampling: uniform without replacement, using only O(N) space.
+      pages = original.slice(0, count);
+      for (let i = count; i < original.length; i += 1) {
+        const index = Math.floor(Math.random() * (i + 1));
+        if (index < count) pages[index] = original[i]!;
+      }
+    } else {
+      pages = mode === "first" ? original.slice(0, count) : original.slice(-count);
+    }
+    // This is a static snapshot, not a query that can regenerate the full list.
+    const { source: _source, ...snapshot } = outcome.selection;
+    const selection: Selection = { ...snapshot, pages };
+    const caps = this.#checkCaps(selection);
+    if (!caps.ok) {
+      this._error = userMessage(caps.error);
+      return;
+    }
+    this._outcome = {
+      selection,
+      report: { ...outcome.report, ingested: pages.length },
+    };
+    this._error = undefined;
+    this.#confirm();
+  }
+
   #confirm(): void {
     const outcome = this._outcome;
-    if (outcome === undefined) return;
+    if (outcome === undefined || !this.#checkCaps(outcome.selection).ok) return;
     const resolve = this.#resolve;
     this.#resolve = undefined;
     this.#reject = undefined; // closing must not also reject
@@ -413,6 +453,10 @@ export class SelectionPicker extends LitElement {
         ? allowlist.map((dbname) => this.#sitematrix?.domainFor(dbname) ?? dbname)
         : (this.#sitematrix?.sites() ?? []).map((site) => site.domain);
     const outcome = this._outcome;
+    const caps = outcome === undefined ? undefined : this.#checkCaps(outcome.selection);
+    const subsetCount = Math.floor(this.maxItems ?? 0);
+    const canSubset = outcome !== undefined && subsetCount > 0 &&
+      outcome.selection.pages.length > subsetCount;
 
     return html`<dialog part="dialog" @close=${() => this.#onClose()}>
       <h2 part="title">${STRINGS.dialogTitle}</h2>
@@ -454,7 +498,18 @@ export class SelectionPicker extends LitElement {
         ${this._error === undefined
           ? nothing
           : html`<p part="error" role="alert">${this._error}</p>`}
-        ${outcome === undefined
+        ${canSubset
+          ? html`<div part="subsets">
+              ${(["first", "last", "random"] as const).map(
+                (mode) => html`<button
+                  part="use-subset"
+                  data-subset=${mode}
+                  @click=${() => this.#useSubset(mode)}
+                >${STRINGS.useSubset(mode, subsetCount)}</button>`,
+              )}
+            </div>`
+          : nothing}
+        ${outcome === undefined || !caps?.ok
           ? nothing
           : html`<p part="summary">
               ${STRINGS.ingestSummary(
@@ -474,7 +529,7 @@ export class SelectionPicker extends LitElement {
         >
           ${this._busy ? STRINGS.loading : STRINGS.load}
         </button>
-        <button part="confirm" ?disabled=${outcome === undefined} @click=${() => this.#confirm()}>
+        <button part="confirm" ?disabled=${!caps?.ok} @click=${() => this.#confirm()}>
           ${STRINGS.confirm}
         </button>
       </footer>

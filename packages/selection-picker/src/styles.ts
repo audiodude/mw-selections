@@ -145,6 +145,13 @@ export const pickerStyles = css`
     color: #14866d;
   }
 
+  div[part="subsets"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: var(--sp-gap);
+  }
+
   p[part="filename"] {
     margin: 0;
     color: #54595d;

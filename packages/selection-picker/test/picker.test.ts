@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { beforeEach, expect, test } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 import type { ResponseLike, Selection } from "@audiodude/selection-core";
 import "../src/index.js";
 import type { SelectionPicker } from "../src/selection-picker.js";
@@ -162,11 +162,46 @@ test("a cap violation is shown, blocks confirm, and leaves the promise pending",
   setValue(shadow<HTMLTextAreaElement>(el, "textarea[part=manual]"), "Paris\nBerlin");
   await click(el, "button[part=load]");
 
-  expect(shadow(el, "p[part=error]").textContent?.trim()).toBe(
-    "This selection has 2 items; this page accepts at most 1.",
-  );
   expect(shadow<HTMLButtonElement>(el, "button[part=confirm]").disabled).toBe(true);
   expect(settled).toBe(false);
+});
+
+test.each([
+  ["first", ["Paris", "Berlin"]],
+  ["last", ["Rome", "London"]],
+  ["random", ["London", "Berlin"]],
+] as const)("oversized selection: use %s accepts only the chosen pages", async (mode, expected) => {
+  const el = mount(`dbname="enwiki" max-items="2"`);
+  const pending = el.open();
+  await settle(el);
+  setValue(shadow<HTMLTextAreaElement>(el, "textarea[part=manual]"), "Paris\nBerlin\nRome\nLondon");
+  await click(el, "button[part=load]");
+  const random = vi.spyOn(Math, "random").mockReturnValue(0);
+  try {
+    await click(el, `button[data-subset=${mode}]`);
+  } finally {
+    random.mockRestore();
+  }
+  const selection = await pending;
+  expect(selection.pages).toEqual(expected);
+  expect(selection.source).toBeUndefined();
+  expect(shadow<HTMLDialogElement>(el, "dialog").open).toBe(false);
+});
+
+test("a subset must still fit the byte cap and can be discarded by editing", async () => {
+  const el = mount(`dbname="enwiki" max-items="1" max-bytes="1"`);
+  let resolved = false;
+  void el.open().then(() => { resolved = true; }, () => undefined);
+  await settle(el);
+  setValue(shadow<HTMLTextAreaElement>(el, "textarea[part=manual]"), "Paris\nBerlin");
+  await click(el, "button[part=load]");
+  await click(el, "button[data-subset=first]");
+  expect(resolved).toBe(false);
+  expect(shadow<HTMLDialogElement>(el, "dialog").open).toBe(true);
+  expect(shadow<HTMLButtonElement>(el, "button[part=confirm]").disabled).toBe(true);
+  setValue(shadow<HTMLTextAreaElement>(el, "textarea[part=manual]"), "Rome");
+  await settle(el);
+  expect(el.renderRoot.querySelector("button[data-subset]")).toBeNull();
 });
 
 test("an upstream dbname outside the allowlist is reported as domains", async () => {

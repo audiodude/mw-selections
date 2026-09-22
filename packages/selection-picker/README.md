@@ -64,8 +64,8 @@ bundle or the normal npm entry, not both.
 | Attribute | Meaning |
 |---|---|
 | `dbname` | Comma-separated **allowlist** of dbnames. One entry pins the project and hides the project field. Several entries restrict the project field. Absent: every Wikimedia project is offered. A source-derived dbname outside the list is a hard error, phrased as domains ("Your URL names de.wikipedia.org, but this page is only configured to accept en.wikipedia.org."). |
-| `max-bytes` | Cap on the UTF-8 byte length of the canonical Selection JSON. Exceeding it rejects; the widget never truncates. |
-| `max-items` | Cap on `pages.length`. Same semantics. |
+| `max-bytes` | Cap on the UTF-8 byte length of the canonical Selection JSON. Exceeding it blocks acceptance, including for an explicitly chosen subset. |
+| `max-items` | Cap on `pages.length`. Oversized results offer **Use first N**, **Use last N**, and **Use random N**, where N is the item cap. Nothing is truncated automatically. |
 | `proxy` | Optional escape hatch for hosts running their own materializer. PetScan, WDQS, and Quarry requests become `<proxy>?url=<encoded upstream URL>`; the proxy must return the upstream body unchanged. WikiProject requests (including English Wikipedia namespace metadata) and the sitematrix are never proxied. Nothing defaults to it. |
 
 ## API
@@ -105,6 +105,11 @@ bundle or the normal npm entry, not both.
 | Quarry | `{type: "quarry", url, dynamic: true}` |
 | WikiProject | `{type: "wikiproject", project, url, dynamic: true}` |
 
+For oversized results in any mode, the subset buttons accept immediately without
+reloading the source. First/last use the loaded order; random samples without
+replacement. Subsets omit `source` so they are static snapshots, not dynamic
+queries that could regenerate the full list. The byte cap still applies.
+
 Every emitted Selection passes `selection-core`'s structural gate
 (`validateSelection`) before the widget hands it over. SPEC §8 assigns that
 gate to the *storing system*; the widget runs the same check first (task 03
@@ -122,8 +127,9 @@ the picker. Then click **Load**. It fetches every page of
 namespace prefixes are resolved using English Wikipedia's siteinfo, so
 categories and other non-mainspace pages retain their namespace IDs. Existing
 `dbname`, `max-items`, and `max-bytes` policies apply; failures never emit a
-partial list. Cancelling, switching tabs, or changing the project discards
-in-flight article results.
+partial list automatically. When the item cap is exceeded, the user can explicitly
+accept a first, last, or random subset. Cancelling, switching tabs, or changing
+the project discards in-flight article results.
 
 `wikiproject` is a picker-defined source extension (SPEC §6.1). `project` is
 the WP1 project name and `url` is its articles endpoint. Reopening a selection
